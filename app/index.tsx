@@ -1,20 +1,33 @@
 import { View, Text, StyleSheet, ImageBackground, TextInput, TouchableOpacity } from 'react-native';
-import React from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { useGlobalStyle } from './hooks/GlobalStyleContext';
 import * as Haptics from 'expo-haptics';
 
+// Sanitizer function for managing input
+function Sanitizer(value: string, setFunc: Dispatch<SetStateAction<string>>, regex: any) {
+  const sanitizedInput = value.replace(regex, '');
+  console.log(sanitizedInput) // Removes unwanted characters
+  setFunc(sanitizedInput);
+}
+
 export default function Index() {
   const router = useRouter();
   const globalStyle = useGlobalStyle();
 
-  const handleLogin = () => {
-    // Trigger haptic feedback
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  // State management for email and password
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-    // Navigate to the Home screen
+  const handleLogin = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.replace('/(tabs)/Home');
+  };
+
+  const handleRegister = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.replace('./register');
   };
 
   return (
@@ -30,22 +43,28 @@ export default function Index() {
           Fitness Trainer
         </Text>
 
-        <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+        <View style={[styles.inputContainer, { backgroundColor: 'transparent' }]}>
           <FontAwesome name="envelope" size={20} color="white" style={styles.icon} />
           <TextInput
+            textContentType="emailAddress"
             placeholder="Email Address"
             placeholderTextColor="white"
+            value={email} // Bind to state
+            onChangeText={(text) => Sanitizer(text, setEmail, /[^a-zA-Z0-9@.]/g)} // Allow only letters, numbers, @, and .
             style={[styles.input, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.s }]}
           />
         </View>
 
-        <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+        <View style={[styles.inputContainer, { backgroundColor: 'transparent' }]}>
           <FontAwesome name="lock" size={20} color="white" style={styles.icon} />
           <TextInput
+            textContentType="password"
             placeholder="Password"
             placeholderTextColor="white"
-            style={[styles.input, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.s }]}
+            value={password} // Bind to state
+            onChangeText={(text) => Sanitizer(text, setPassword, /[<>()]/g)} // Exclude < and >
             secureTextEntry
+            style={[styles.input, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.s }]}
           />
         </View>
 
@@ -73,6 +92,19 @@ export default function Index() {
           <Text style={[styles.googleButtonText, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.m }]}>Google Login</Text>
         </TouchableOpacity>
       </View>
+
+
+      <View style={styles.registerSection}>
+        <Text style={[styles.registerText, { fontFamily: globalStyle.fontStyle.textFont }]}>
+          New User?{' '}
+          <Text
+            style={[styles.registerLink, { color: globalStyle.colors.primary }]}
+            onPress={handleRegister}
+          >
+            Register Now
+          </Text>
+        </Text>
+      </View>
     </ImageBackground>
   );
 }
@@ -89,13 +121,11 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    display: "flex",
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
   },
   title: {
-
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
@@ -104,7 +134,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
+    borderBottomWidth: 1,
+    borderColor: 'white', // Bottom border only for underline effect
     paddingHorizontal: 10,
     marginVertical: 10,
     width: '100%',
@@ -119,36 +150,49 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     color: 'white',
-    marginVertical: 10,
-    marginRight: 220,
-
+    marginVertical: 15,
+    marginRight: 140,
+    width: 200,
+    alignSelf: 'flex-start',
   },
   highlight: {
-    fontWeight: 'bold'
+    fontWeight: 'bold',
   },
   loginButton: {
-    borderRadius: 10,
+    borderRadius: 15,
     paddingVertical: 15,
-    width: '100%',
+    width: '75%',
     alignItems: 'center',
-    marginVertical: 0,
+    marginTop: 12
   },
   loginButtonText: {
     color: 'white',
-
-    fontWeight: 700,
+    fontWeight: '700',
   },
   googleButton: {
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 15,
     paddingVertical: 15,
-    width: '100%',
+    width: '75%',
+    marginTop: 20,
     alignItems: 'center',
-    marginVertical: 10,
+
   },
   googleButtonText: {
     color: 'black',
-
-    fontWeight: 700,
+    fontWeight: '700',
+  },
+  registerSection: {
+    position: 'absolute',
+    bottom: 30,
+    alignSelf: 'center',
+  },
+  registerText: {
+    color: 'white',
+    fontSize: 14,
+  },
+  registerLink: {
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 });
