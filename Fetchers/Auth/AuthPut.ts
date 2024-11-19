@@ -1,4 +1,4 @@
-export function AuthPut(url: string, data: any, errorHandler: () => {}, accessToken: any, responseHandler?: () => {}) {
+export default function AuthPut(url: string, data: any, errorHandler: () => {}, accessToken: any, responseHandler?: () => {}) {
 
     fetch(url, { method: "PUT", headers: { "Content-Type": "application/json", authorization: `Bearer ${accessToken}` }, body: JSON.stringify(data) })
         .then(response => {

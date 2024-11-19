@@ -2,7 +2,7 @@ import { View, Text } from 'react-native'
 import React from 'react'
 import { Tabs } from 'expo-router'
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import { useGlobalStyle } from '../hooks/GlobalStyleContext';
+import useGlobalStyle from '../hooks/GlobalStyleContext';
 
 
 export default function TabLayout() {

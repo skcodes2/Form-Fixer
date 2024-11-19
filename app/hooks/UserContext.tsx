@@ -4,9 +4,12 @@ import React, { createContext, useContext, useState } from 'react';
 // Define the structure of the User object
 export interface User {
     id: string;
-    name: string;
+    fname: string;
+    lname: string;
+    age: number;
     email: string;
     password: string
+    isLoggedIn: boolean
 }
 
 
@@ -30,11 +33,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 };
 
-// Custom hook to access the UserContext
-export const useUser = (): UserContextType => {
+const useUser = (): UserContextType => {
     const context = useContext(UserContext);
     if (!context) {
         throw new Error('useUser must be used within a UserProvider');
     }
     return context;
 };
+
+export default useUser;

@@ -1,17 +1,25 @@
 
-import { header } from "./Get.js"
+import { header } from "./Get"
+import { User } from "app/hooks/UserContext.js";
 
-export default function Post(url: string, data: any, errorHandler: () => {}, responseHandler?: () => {}) {
+export default function Post(url: string, data: any, errorHandler: (error: any) => void, responseHandler?: () => void, setter?: (data: User) => void) {
 
     fetch(url, { method: "POST", headers: header, body: JSON.stringify(data) })
         .then(response => {
             if (!response.ok) {
-                errorHandler()
-                return
+                return response.json().then((errorData) => {
+                    // Handle the error response
+
+                    errorHandler(errorData.error);
+                    throw new Error("Response not OK");
+                });
             }
-            response.json()
+            return response.json() as Promise<User>
         })
-        .then(data => {
+        .then((data: User) => {
+            if (setter) {
+                setter(data)
+            }
             if (responseHandler) {
                 responseHandler()
             }
@@ -19,7 +27,7 @@ export default function Post(url: string, data: any, errorHandler: () => {}, res
 
         .catch(error => {
             console.log(error)
-            errorHandler()
+
         })
 
 }

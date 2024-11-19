@@ -1,9 +1,17 @@
 import { View, Text, StyleSheet, ImageBackground, TextInput, TouchableOpacity } from 'react-native';
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { useRouter } from 'expo-router';
+import useUser from './hooks/UserContext';
 import { FontAwesome } from '@expo/vector-icons';
-import { useGlobalStyle } from './hooks/GlobalStyleContext';
+import useGlobalStyle from './hooks/GlobalStyleContext';
 import * as Haptics from 'expo-haptics';
+
+import AuthPost from '../Fetchers/Auth/AuthDelete';
+import Post from '../Fetchers/NoAuth/Post';
+import Put from '../Fetchers/NoAuth/Put';
+
+const host = "http://10.0.0.242:3000"
+
 
 // Sanitizer function for managing input
 function Sanitizer(value: string, setFunc: Dispatch<SetStateAction<string>>, regex: any) {
@@ -15,14 +23,27 @@ function Sanitizer(value: string, setFunc: Dispatch<SetStateAction<string>>, reg
 export default function Index() {
   const router = useRouter();
   const globalStyle = useGlobalStyle();
+  const { setUser } = useUser()
 
   // State management for email and password
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState("")
 
   const handleLogin = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.replace('/(tabs)/Home');
+
+    console.log(email)
+    console.log(password)
+
+    Post(
+      host + "/users/login",
+      { email, password },
+      (error) => { setError(error) },
+      () => { router.replace('/(tabs)/Home'); },
+      setUser
+    )
+
   };
 
   const handleRegister = () => {
@@ -72,6 +93,8 @@ export default function Index() {
           <Text style={[styles.forgotPassword, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.xs }]}>Forgot Password?</Text>
         </TouchableOpacity>
 
+        <Text style={{ fontSize: globalStyle.fontSize.s, color: globalStyle.colors.primary }}>{error}</Text>
+
         <TouchableOpacity
           style={[styles.loginButton, { backgroundColor: globalStyle.colors.primary }]}
           onPress={() => {
@@ -86,7 +109,7 @@ export default function Index() {
           style={styles.googleButton}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            handleLogin();
+
           }}
         >
           <Text style={[styles.googleButtonText, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.m }]}>Google Login</Text>

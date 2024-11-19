@@ -1,10 +1,12 @@
-export function AuthPost(url: string, data: any, errorHandler: () => {}, accessToken: any, responseHandler?: () => {},) {
+export default function AuthPost(url: string, data: any, errorHandler: (error: any) => {}, accessToken: any, responseHandler?: () => {},) {
 
     fetch(url, { method: "POST", headers: { "Content-Type": "application/json", authorization: `Bearer ${accessToken}` }, body: JSON.stringify(data) })
         .then(response => {
             if (!response.ok) {
-                errorHandler()
-                return
+                return response.json().then((errorData) => {
+                    // Handle the error response
+                    errorHandler(errorData.error);
+                });
             }
             response.json()
         })
@@ -16,7 +18,7 @@ export function AuthPost(url: string, data: any, errorHandler: () => {}, accessT
 
         .catch(error => {
             console.log(error)
-            errorHandler()
+
         })
 
 }

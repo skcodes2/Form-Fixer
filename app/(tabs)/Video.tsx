@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';

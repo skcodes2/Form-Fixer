@@ -44,7 +44,7 @@ app-example
 
 # dependencies
 node_modules/
-
+android/
 # Expo
 .expo/
 dist/
@@ -78,3 +78,4 @@ yarn-error.*
 *.tsbuildinfo
 
 # @end expo-cli
+app.json

@@ -64,4 +64,6 @@ export const GlobalStyleProvider: React.FC<{ children: React.ReactNode }> = ({ c
 };
 
 // Custom hook to access the GlobalStyleContext
-export const useGlobalStyle = () => useContext(GlobalStyleContext);
+const useGlobalStyle = () => useContext(GlobalStyleContext);
+
+export default useGlobalStyle

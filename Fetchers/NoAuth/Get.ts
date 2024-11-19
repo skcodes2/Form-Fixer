@@ -5,14 +5,16 @@ export let header = {
     "Content-Type": "application/json"
 }
 
-export default function Get(url: string, setter: (data: any) => void, errorHandler: () => void) {
+export default function Get(url: string, setter: (data: any) => void, errorHandler: (error: any) => void) {
 
     fetch(url, { method: "GET", headers: header })
 
         .then(response => {
             if (!response.ok) {
-                errorHandler()
-                return
+                return response.json().then((errorData) => {
+                    // Handle the error response
+                    errorHandler(errorData.error);
+                });
             }
 
             response.json()
@@ -23,7 +25,7 @@ export default function Get(url: string, setter: (data: any) => void, errorHandl
 
         .catch(error => {
             console.log(error)
-            errorHandler()
+
         })
 }
 
