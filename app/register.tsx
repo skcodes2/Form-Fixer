@@ -8,6 +8,7 @@ import {
     ImageBackground,
     Keyboard,
     TouchableWithoutFeedback,
+    Alert
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -22,7 +23,38 @@ const Register: React.FC<{ navigation: any }> = ({ navigation }) => {
     const router = useRouter();
 
     const handleRegister = (): void => {
+        // Array of fields with their corresponding error messages
+        const fields = [
+            { value: firstName, message: "Please enter your first name." },
+            { value: lastName, message: "Please enter your last name." },
+            { value: email, message: "Please enter your email address." },
+            { value: email, message: "Please enter your password." },
+            { value: age, message: "Please enter your age." },
+        ];
+
+        // Check for empty fields dynamically
+        for (const field of fields) {
+            if (!field.value) {
+                Alert.alert('Error', field.message);
+                return;
+            }
+        }
+
+        // validate the length of passwords
+        if (password.length < 6 || password.length > 16) {
+            Alert.alert('Error', 'Password must be between 6 and 16 characters.');
+            return;
+        }
+
+        // validate that passwords match
+        if (password !== confirmPassword) {
+            Alert.alert('Error', 'Passwords do not match.');
+            return;
+        }
+
+        // register success/not success
         console.log('Registering user...', { firstName, lastName, email, age });
+        Alert.alert('Success', 'Registration complete!');
     };
 
     return (
