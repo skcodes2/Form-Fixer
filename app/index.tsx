@@ -48,7 +48,7 @@ export default function Index() {
 
   const handleRegister = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace('./register');
+    router.push('./register');
   };
 
   return (
