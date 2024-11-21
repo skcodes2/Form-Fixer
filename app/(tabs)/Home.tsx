@@ -31,6 +31,7 @@ export default function Home() {
                         <Text style={styles.formLabel}>Forms Left</Text>
                     </View>
                 </View>
+                <Text style={styles.chooseFormTitle}>Choose Form</Text>
             </View>
         </ImageBackground>
     );
@@ -92,5 +93,11 @@ const styles = StyleSheet.create({
     formLabel: {
         fontSize: 16,
         color: 'white',
+    },
+    chooseFormTitle: {
+        fontSize: 24,
+        color: '#FFFFFF',
+        marginTop: 30,
+        fontWeight: 'bold',
     },
 });

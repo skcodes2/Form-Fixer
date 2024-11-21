@@ -3,14 +3,25 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'rea
 import { FontAwesome } from '@expo/vector-icons';
 import useGlobalStyle from '../hooks/GlobalStyleContext';
 import { useRouter } from 'expo-router';
-
+import useUser from '../hooks/UserContext';
+import AuthPost from '../../Fetchers/Auth/AuthDelete';
 export default function Settings() {
     const globalStyle = useGlobalStyle();
     const router = useRouter();
+    const { user, setUser } = useUser()
+
+    if (user && Array.isArray(user)) {
+        const [userInfo, token] = user;
+    }
+
 
     const handleNavigation = (route: string) => {
         router.push(route); // Navigate to specific routes when implemented
     };
+
+    function handleSignOut() {
+
+    }
 
     return (
         <ScrollView style={[styles.container, { backgroundColor: globalStyle.colors.bgColor }]}>
@@ -28,11 +39,19 @@ export default function Settings() {
             <View style={styles.menu}>
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => handleNavigation('/account')}
+                    onPress={() => handleNavigation('/accounte')}
                 >
                     <Text style={[styles.menuText, { fontFamily: globalStyle.fontStyle.textFont }]}>Account</Text>
                     <FontAwesome name="chevron-right" size={18} color={globalStyle.colors.secondary} />
                 </TouchableOpacity>
+
+                {/* <TouchableOpacity
+                onPress={() => navigation.navigate('AccountSettingsPage')}
+                >
+                <Text style={styles.menuText}>Account</Text>
+                </TouchableOpacity>
+                */}
+
 
                 <TouchableOpacity
                     style={styles.menuItem}
@@ -68,7 +87,7 @@ export default function Settings() {
 
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => router.replace('/logout')} // Navigate to logout or clear session
+                    onPress={() => handleSignOut()} // Navigate to logout or clear session
                 >
                     <Text style={[styles.menuText, { fontFamily: globalStyle.fontStyle.textFont, color: globalStyle.colors.primary }]}>
                         Sign out

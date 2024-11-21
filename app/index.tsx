@@ -1,4 +1,13 @@
-import { View, Text, StyleSheet, ImageBackground, TextInput, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ImageBackground,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  Alert,
+} from 'react-native';
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { useRouter } from 'expo-router';
 import useUser from './hooks/UserContext';
@@ -16,7 +25,7 @@ const host = "http://192.168.2.19:3000"
 // Sanitizer function for managing input
 function Sanitizer(value: string, setFunc: Dispatch<SetStateAction<string>>, regex: any) {
   const sanitizedInput = value.replace(regex, '');
-  console.log(sanitizedInput) // Removes unwanted characters
+  // Removes unwanted characters
   setFunc(sanitizedInput);
 }
 
@@ -29,12 +38,11 @@ export default function Index() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState("")
+  const [modalEmail, setModalEmail] = useState(''); // for popup window
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handleLogin = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    console.log(email)
-    console.log(password)
 
     Post(
       host + "/users/login",
@@ -46,9 +54,31 @@ export default function Index() {
 
   };
 
+  // route to fetch and handle register functionality
   const handleRegister = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('./register');
+  };
+
+  // route to fetch and handle forgot password functionality
+  const handleForgotPwrd = () => {
+    if (!modalEmail) {
+      Alert.alert("Error", "Please enter your email address.");
+      return;
+    }
+
+    Put(
+      host + "/users/forgot-password",
+      { email: modalEmail },
+      (error) => {
+        setError(error);
+        Alert.alert("Error", error);
+      },
+      () => {
+        Alert.alert("Success", "Password reset email sent successfully.");
+        setIsModalVisible(false);
+      }
+    );
   };
 
   return (
@@ -89,7 +119,7 @@ export default function Index() {
           />
         </View>
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handleForgotPwrd}>
           <Text style={[styles.forgotPassword, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.xs }]}>Forgot Password?</Text>
         </TouchableOpacity>
 
@@ -217,5 +247,48 @@ const styles = StyleSheet.create({
   registerLink: {
     fontWeight: 'bold',
     textDecorationLine: 'underline',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  modalInput: {
+    width: '100%',
+    borderBottomWidth: 1,
+    borderColor: 'gray',
+    padding: 8,
+    marginBottom: 20,
+    fontSize: 16,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    borderRadius: 5,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
