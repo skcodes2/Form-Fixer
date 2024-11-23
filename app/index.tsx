@@ -19,11 +19,11 @@ import AuthPost from '../Fetchers/Auth/AuthDelete';
 import Post from '../Fetchers/NoAuth/Post';
 import Put from '../Fetchers/NoAuth/Put';
 
-const host = "http://192.168.2.19:3000"
+export let host = "http://10.0.0.242:3000"
 
 
 // Sanitizer function for managing input
-function Sanitizer(value: string, setFunc: Dispatch<SetStateAction<string>>, regex: any) {
+export function Sanitizer(value: string, setFunc: Dispatch<SetStateAction<string>>, regex: any) {
   const sanitizedInput = value.replace(regex, '');
   // Removes unwanted characters
   setFunc(sanitizedInput);
@@ -32,7 +32,7 @@ function Sanitizer(value: string, setFunc: Dispatch<SetStateAction<string>>, reg
 export default function Index() {
   const router = useRouter();
   const globalStyle = useGlobalStyle();
-  const { setUser } = useUser()
+  const { setUser, setToken } = useUser()
 
   // State management for email and password
   const [email, setEmail] = useState('');
@@ -49,7 +49,10 @@ export default function Index() {
       { email, password },
       (error) => { setError(error) },
       () => { router.replace('/(tabs)/Home'); },
-      setUser
+      (data) => {
+        setUser(data[0])
+        setToken(data[1])
+      }
     )
 
   };
@@ -62,24 +65,43 @@ export default function Index() {
 
   // route to fetch and handle forgot password functionality
   const handleForgotPwrd = () => {
-    if (!modalEmail) {
+    const trimmedEmail = modalEmail.trim();
+
+    console.log("****************" + trimmedEmail) // PROXY
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!trimmedEmail) {
       Alert.alert("Error", "Please enter your email address.");
       return;
     }
 
-    Put(
+    if (!emailRegex.test(trimmedEmail)) {
+      Alert.alert("Error", "Please enter a valid email address in the format: example@gmail.com");
+      return;
+    }
+
+    console.log("Sending forgot password request for email:", trimmedEmail);
+
+    // Sending email request to backend
+    Post(
       host + "/users/forgot-password",
-      { email: modalEmail },
+      { email: trimmedEmail },
       (error) => {
-        setError(error);
-        Alert.alert("Error", error);
+        console.error("Error response from server:", error);
+        const errorMessage = typeof error === "string" ? error : "An unexpected error occurred.";
+        setError(errorMessage);
+        Alert.alert("Error", errorMessage);
       },
       () => {
-        Alert.alert("Success", "Password reset email sent successfully.");
+        console.log("Server responded");
+        Alert.alert("Success", "Password reset email has been sent successfully.");
         setIsModalVisible(false);
       }
     );
+
   };
+
 
   return (
     <ImageBackground
@@ -119,9 +141,71 @@ export default function Index() {
           />
         </View>
 
-        <TouchableOpacity onPress={handleForgotPwrd}>
+        <TouchableOpacity onPress={() => setIsModalVisible(true)}>
           <Text style={[styles.forgotPassword, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.xs }]}>Forgot Password?</Text>
         </TouchableOpacity>
+
+        {/* <View style={styles.container}>
+          <Text style={styles.title}>Reset Password</Text>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <TextInput
+            placeholder="Enter new password"
+            placeholderTextColor="gray"
+            secureTextEntry
+            value={newPassword}
+            onChangeText={setNewPassword}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Confirm new password"
+            placeholderTextColor="gray"
+            secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            style={styles.input}
+          />
+
+          <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
+            <Text style={styles.buttonText}>Reset Password</Text>
+          </TouchableOpacity>
+        </View> */}
+
+        <Modal
+          visible={isModalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setIsModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Reset Password</Text>
+              <TextInput
+                placeholder="Enter your email"
+                placeholderTextColor="gray"
+                value={modalEmail}
+                onChangeText={(text) => setModalEmail(text)}
+                style={styles.modalInput}
+              />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: globalStyle.colors.primary }]}
+                  onPress={handleForgotPwrd}
+                >
+                  <Text style={styles.modalButtonText}>Send Email</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: 'gray' }]}
+                  onPress={() => setIsModalVisible(false)}
+                >
+                  <Text style={styles.modalButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
 
         <Text style={{ fontSize: globalStyle.fontSize.s, color: globalStyle.colors.primary }}>{error}</Text>
 
@@ -168,6 +252,22 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     justifyContent: 'center',
   },
+  // button: {
+  //   backgroundColor: '#007BFF',
+  //   padding: 15,
+  //   borderRadius: 5,
+  //   width: '100%',
+  //   alignItems: 'center',
+  // },
+  // buttonText: {
+  //   color: '#fff',
+  //   fontWeight: 'bold',
+  //   fontSize: 16,
+  // },
+  // error: {
+  //   color: 'red',
+  //   marginBottom: 10,
+  // },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

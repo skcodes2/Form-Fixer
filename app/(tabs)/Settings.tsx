@@ -1,26 +1,34 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import useGlobalStyle from '../hooks/GlobalStyleContext';
 import { useRouter } from 'expo-router';
 import useUser from '../hooks/UserContext';
-import AuthPost from '../../Fetchers/Auth/AuthDelete';
+import AuthPost from '../../Fetchers/Auth/AuthPost';
+import { host } from "../index"
 export default function Settings() {
+
     const globalStyle = useGlobalStyle();
     const router = useRouter();
-    const { user, setUser } = useUser()
 
-    if (user && Array.isArray(user)) {
-        const [userInfo, token] = user;
-    }
-
+    const { token, setToken, setUser } = useUser()
 
     const handleNavigation = (route: string) => {
-        router.push(route); // Navigate to specific routes when implemented
+        // Navigate to specific routes when implemented
     };
 
+    //signout
     function handleSignOut() {
-
+        AuthPost(host + "/users/signout",
+            {},
+            (error) => Alert.alert(error),
+            token,
+        )
+        //when signed out go to login page
+        //get rid of current user and token
+        router.replace("/")
+        setUser(null)
+        setToken("")
     }
 
     return (
@@ -39,7 +47,7 @@ export default function Settings() {
             <View style={styles.menu}>
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => handleNavigation('/accounte')}
+                    onPress={() => handleNavigation('/account')}
                 >
                     <Text style={[styles.menuText, { fontFamily: globalStyle.fontStyle.textFont }]}>Account</Text>
                     <FontAwesome name="chevron-right" size={18} color={globalStyle.colors.secondary} />

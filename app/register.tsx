@@ -12,10 +12,14 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { Sanitizer } from './index';
+import Put from "../Fetchers/NoAuth/Put"
 
-const Register: React.FC<{ navigation: any }> = ({ navigation }) => {
-    const [firstName, setFirstName] = useState<string>('');
-    const [lastName, setLastName] = useState<string>('');
+import { host } from './index';
+
+const Register: React.FC = () => {
+    const [fname, setFname] = useState<string>(''); // Updated to fname
+    const [lname, setLname] = useState<string>(''); // Updated to lname
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -23,16 +27,14 @@ const Register: React.FC<{ navigation: any }> = ({ navigation }) => {
     const router = useRouter();
 
     const handleRegister = (): void => {
-        // Array of fields with their corresponding error messages
         const fields = [
-            { value: firstName, message: "Please enter your first name." },
-            { value: lastName, message: "Please enter your last name." },
-            { value: email, message: "Please enter your email address." },
-            { value: email, message: "Please enter your password." },
-            { value: age, message: "Please enter your age." },
+            { value: fname, message: 'Please enter your first name.' },
+            { value: lname, message: 'Please enter your last name.' },
+            { value: email, message: 'Please enter your email address.' },
+            { value: password, message: 'Please enter your password.' },
+            { value: age, message: 'Please enter your age.' },
         ];
 
-        // Check for empty fields dynamically
         for (const field of fields) {
             if (!field.value) {
                 Alert.alert('Error', field.message);
@@ -40,21 +42,21 @@ const Register: React.FC<{ navigation: any }> = ({ navigation }) => {
             }
         }
 
-        // validate the length of passwords
         if (password.length < 6 || password.length > 16) {
             Alert.alert('Error', 'Password must be between 6 and 16 characters.');
             return;
         }
 
-        // validate that passwords match
         if (password !== confirmPassword) {
             Alert.alert('Error', 'Passwords do not match.');
             return;
         }
+        Put(host + "/users/register", { email, password, age, fname, lname },
+            (error) => Alert.alert(error),
+            (response) => { Alert.alert(response); router.replace('/') }
+        )
 
-        // register success/not success
-        console.log('Registering user...', { firstName, lastName, email, age });
-        Alert.alert('Success', 'Registration complete!');
+
     };
 
     return (
@@ -74,8 +76,9 @@ const Register: React.FC<{ navigation: any }> = ({ navigation }) => {
                             placeholder="First Name"
                             placeholderTextColor="#bbb"
                             style={styles.input}
-                            value={firstName}
-                            onChangeText={setFirstName}
+                            value={fname}
+                            onChangeText={(value) => Sanitizer(value, setFname, /[^a-zA-Z\s]/g)}
+                            inputMode="text"
                         />
                     </View>
 
@@ -85,8 +88,9 @@ const Register: React.FC<{ navigation: any }> = ({ navigation }) => {
                             placeholder="Last Name"
                             placeholderTextColor="#bbb"
                             style={styles.input}
-                            value={lastName}
-                            onChangeText={setLastName}
+                            value={lname}
+                            onChangeText={(value) => Sanitizer(value, setLname, /[^a-zA-Z\s]/g)}
+                            inputMode="text"
                         />
                     </View>
 
@@ -97,8 +101,9 @@ const Register: React.FC<{ navigation: any }> = ({ navigation }) => {
                             placeholderTextColor="#bbb"
                             style={styles.input}
                             value={email}
-                            onChangeText={setEmail}
+                            onChangeText={(value) => Sanitizer(value, setEmail, /[^a-zA-Z0-9@._-]/g)}
                             keyboardType="email-address"
+                            inputMode="email"
                         />
                     </View>
 
@@ -109,8 +114,9 @@ const Register: React.FC<{ navigation: any }> = ({ navigation }) => {
                             placeholderTextColor="#bbb"
                             style={styles.input}
                             value={password}
-                            onChangeText={setPassword}
+                            onChangeText={(value) => Sanitizer(value, setPassword, /[^a-zA-Z0-9!@#$%^&*]/g)}
                             secureTextEntry
+                            inputMode="text"
                         />
                     </View>
 
@@ -121,8 +127,9 @@ const Register: React.FC<{ navigation: any }> = ({ navigation }) => {
                             placeholderTextColor="#bbb"
                             style={styles.input}
                             value={confirmPassword}
-                            onChangeText={setConfirmPassword}
+                            onChangeText={(value) => Sanitizer(value, setConfirmPassword, /[^a-zA-Z0-9!@#$%^&*]/g)}
                             secureTextEntry
+                            inputMode="text"
                         />
                     </View>
 
@@ -133,8 +140,9 @@ const Register: React.FC<{ navigation: any }> = ({ navigation }) => {
                             placeholderTextColor="#bbb"
                             style={styles.input}
                             value={age}
-                            onChangeText={setAge}
+                            onChangeText={(value) => Sanitizer(value, setAge, /[^0-9]/g)}
                             keyboardType="numeric"
+                            inputMode="numeric"
                         />
                     </View>
 

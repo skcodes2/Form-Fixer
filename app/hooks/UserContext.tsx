@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
 
-
 // Define the structure of the User object
 export interface User {
     id: string;
@@ -8,15 +7,16 @@ export interface User {
     lname: string;
     age: number;
     email: string;
-    password: string
-    isLoggedIn: boolean
+    password: string;
+    isLoggedIn: boolean;
 }
-
 
 // Define the structure of the context value
 interface UserContextType {
     user: User | null;
     setUser: (user: User | null) => void;
+    token: string | null;
+    setToken: (token: string | null) => void;
 }
 
 // Create the context with a default value
@@ -24,10 +24,13 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Create the provider component
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(null); // State for user
+    const [token, setToken] = useState<string | null>(null); // State for token
     console.log(user)
+    console.log(token)
+
     return (
-        <UserContext.Provider value={{ user, setUser }}>
+        <UserContext.Provider value={{ user, setUser, token, setToken }}>
             {children}
         </UserContext.Provider>
     );

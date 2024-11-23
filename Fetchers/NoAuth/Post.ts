@@ -1,9 +1,7 @@
 
 import { User } from "app/hooks/UserContext.js";
-export let header = {
-    "Content-Type": "application/json"
-}
-export default function Post(url: string, data: any, errorHandler: (error: any) => void, responseHandler?: () => void, setter?: (data: User) => void) {
+import { header } from "./Get"
+export default function Post(url: string, data: any, errorHandler: (error: any) => void, responseHandler?: () => void, setter?: (data: any) => void) {
 
     fetch(url, { method: "POST", headers: header, body: JSON.stringify(data) })
         .then(response => {
@@ -17,7 +15,7 @@ export default function Post(url: string, data: any, errorHandler: (error: any) 
             }
             return response.json() as Promise<User>
         })
-        .then((data: User) => {
+        .then((data) => {
             if (setter) {
                 setter(data)
             }

@@ -1,4 +1,4 @@
-import { header } from "./Get.js";
+import { header } from "./Get";
 
 export default function Put(
     url: string,

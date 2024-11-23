@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, ImageBackground, StyleSheet } from 'react-native';
+import { View, Text, Image, ImageBackground, StyleSheet, ScrollView } from 'react-native';
 
 export default function Home() {
     return (
@@ -7,32 +7,106 @@ export default function Home() {
             source={require('../../assets/images/homebg.png')}
             style={styles.background}
         >
-            <View style={styles.topSection}>
-                <Text style={styles.title}><Text style={{ color: '#8F0404' }}>AI</Text> <Text style={{ color: '#FFFFFF' }}>Fitness Trainer</Text></Text>
-                <View style={styles.formMasteryContainer}>
-                    <View style={styles.leftFormCard}>
-                        <View style={styles.iconAndNumberContainer}>
-                            <Image
-                                source={require('../../assets/images/graph.png')}
-                                style={styles.icon}
-                            />
-                            <Text style={[styles.formNumber, styles.leftFormText]}>5</Text>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <View style={styles.topSection}>
+                    <Text style={styles.title}><Text style={{ color: '#8F0404' }}>AI</Text> <Text style={{ color: '#FFFFFF' }}>Fitness Trainer</Text></Text>
+                    <View style={styles.formMasteryContainer}>
+                        <View style={styles.leftFormCard}>
+                            <View style={styles.iconAndNumberContainer}>
+                                <Image
+                                    source={require('../../assets/images/graph.png')}
+                                    style={styles.icon}
+                                />
+                                <Text style={[styles.formNumber, styles.leftFormText]}>5</Text>
+                            </View>
+                            <Text style={[styles.formLabel, styles.leftFormText]}>Forms Mastered</Text>
                         </View>
-                        <Text style={[styles.formLabel, styles.leftFormText]}>Forms Mastered</Text>
+                        <View style={styles.formCard}>
+                            <View style={styles.iconAndNumberContainer}>
+                                <Image
+                                    source={require('../../assets/images/check.png')}
+                                    style={styles.icon}
+                                />
+                                <Text style={styles.formNumber}>7</Text>
+                            </View>
+                            <Text style={styles.formLabel}>Forms Left</Text>
+                        </View>
                     </View>
-                    <View style={styles.formCard}>
-                        <View style={styles.iconAndNumberContainer}>
-                            <Image
-                                source={require('../../assets/images/check.png')}
-                                style={styles.icon}
-                            />
-                            <Text style={styles.formNumber}>7</Text>
+                    <Text style={styles.chooseFormTitle}>Choose a Form to Master</Text>
+                    <View style={styles.exerciseImagesContainer}>
+                        <View style={styles.exerciseCard}>
+                            <View style={styles.imageOverlay}>
+                                <Image
+                                    source={require('../../assets/images/benchpress.jpg')}
+                                    style={styles.exerciseImage}
+                                />
+                                <View style={styles.textOverlay}>
+                                    <Text style={styles.exerciseLabel}>Barbell Bench</Text>
+                                </View>
+                            </View>
                         </View>
-                        <Text style={styles.formLabel}>Forms Left</Text>
+                        <View style={styles.exerciseCard}>
+                            <View style={styles.imageOverlay}>
+                                <Image
+                                    source={require('../../assets/images/barbellsquat.jpeg')}
+                                    style={styles.exerciseImage}
+                                />
+                                <View style={styles.textOverlay}>
+                                    <Text style={styles.exerciseLabel}>Barbell Squat</Text>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                    <View style={[styles.exerciseImagesContainer, { marginTop: 10 }]}>
+                        <View style={styles.exerciseCard}>
+                            <View style={styles.imageOverlay}>
+                                <Image
+                                    source={require('../../assets/images/deadlift.jpg')}
+                                    style={styles.exerciseImage}
+                                />
+                                <View style={styles.textOverlay}>
+                                    <Text style={styles.exerciseLabel}>Conventional Deadlift</Text>
+                                </View>
+                            </View>
+                        </View>
+                        <View style={styles.exerciseCard}>
+                            <View style={styles.imageOverlay}>
+                                <Image
+                                    source={require('../../assets/images/shoulderpress.jpg')}
+                                    style={styles.exerciseImage}
+                                />
+                                <View style={styles.textOverlay}>
+                                    <Text style={styles.exerciseLabel}>Barbell Shoulder Press</Text>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                    <View style={[styles.exerciseImagesContainer, { marginTop: 10 }]}>
+                        <View style={styles.exerciseCard}>
+                            <View style={styles.imageOverlay}>
+                                <Image
+                                    source={require('../../assets/images/inclinedumbbellpress.jpeg')}
+                                    style={styles.exerciseImage}
+                                />
+                                <View style={styles.textOverlay}>
+                                    <Text style={styles.exerciseLabel}>Incline Dumbbell Press</Text>
+                                </View>
+                            </View>
+                        </View>
+                        <View style={styles.exerciseCard}>
+                            <View style={styles.imageOverlay}>
+                                <Image
+                                    source={require('../../assets/images/lateralraise.jpeg')}
+                                    style={styles.exerciseImage}
+                                />
+                                <View style={styles.textOverlay}>
+                                    <Text style={styles.exerciseLabel}>Shoulder Lateral Raise</Text>
+                                </View>
+                            </View>
+                        </View>
                     </View>
                 </View>
-                <Text style={styles.chooseFormTitle}>Choose Form</Text>
-            </View>
+            </ScrollView>
         </ImageBackground>
     );
 }
@@ -52,6 +126,10 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         height: '100%',
+    },
+    scrollContainer: {
+        flexGrow: 1,
+        alignItems: 'center',
     },
     topSection: {
         alignItems: 'center',
@@ -99,5 +177,44 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         marginTop: 30,
         fontWeight: 'bold',
+    },
+    exerciseImagesContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '90%',
+        marginTop: 20,
+    },
+    exerciseCard: {
+        alignItems: 'center',
+        width: '45%',
+    },
+    imageOverlay: {
+        position: 'relative',
+        width: '100%',
+        height: 150,
+    },
+    exerciseImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: 'white',
+        opacity: 0.9,
+    },
+    textOverlay: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    },
+    exerciseLabel: {
+        fontSize: 16,
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
