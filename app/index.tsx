@@ -19,7 +19,7 @@ import AuthPost from '../Fetchers/Auth/AuthDelete';
 import Post from '../Fetchers/NoAuth/Post';
 import Put from '../Fetchers/NoAuth/Put';
 
-export let host = "http://10.0.0.242:3000"
+export let host = "http://172.30.123.127:3000"
 
 
 // Sanitizer function for managing input
