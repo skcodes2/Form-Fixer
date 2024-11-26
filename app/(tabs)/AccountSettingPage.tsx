@@ -1,228 +1,238 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
     View,
     Text,
+    StyleSheet,
     TextInput,
     TouchableOpacity,
-    StyleSheet,
-    ScrollView,
-} from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
-import useGlobalStyle from "../hooks/GlobalStyleContext";
+    Alert,
+    Modal,
+} from 'react-native';
+import useGlobalStyle from '../hooks/GlobalStyleContext';
+import useUser from '../hooks/UserContext';
+import AuthPut from '../../Fetchers/Auth/AuthPut';
+import Post from '../../Fetchers/NoAuth/Post';
+import { host } from '../index';
 
-export default function AccountSettingsPage() {
+const AccountSettingPage = () => {
     const globalStyle = useGlobalStyle();
+    const { user, setUser, token } = useUser();
 
-    // Mock user data (Replace with actual API call or context)
-    const [user, setUser] = useState({
-        fname: "Alex",
-        lname: "Johnson",
-        age: 30,
-        email: "alexjohnson@gmail.com",
-    });
+    if (!user) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.errorText}>Unable to load user data.</Text>
+            </View>
+        );
+    }
 
     const [editing, setEditing] = useState(false);
-    const [formData, setFormData] = useState({ ...user, currentPassword: "", newPassword: "" });
+    const [firstName, setFirstName] = useState(user.fname);
+    const [lastName, setLastName] = useState(user.lname);
+    const [age, setAge] = useState(user.age.toString());
 
-    const handleInputChange = (key: string, value: string | number) => {
-        setFormData({ ...formData, [key]: value });
+    // Forgot password modal state
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [modalEmail, setModalEmail] = useState(user.email); // Prefill with user's email
+
+    const handleSave = () => {
+        if (!firstName || !lastName || !age) {
+            Alert.alert('Error', 'All fields are required.');
+            return;
+        }
+
+        AuthPut(
+            `${host}/users/update`,
+            { fname: firstName, lname: lastName, age: parseInt(age) },
+            () => Alert.alert('Error', 'Failed to update profile. Please try again.'),
+            token,
+            () => {
+                Alert.alert('Success', 'Profile updated successfully.');
+                setUser((prevUser) => {
+                    if (!prevUser) return null;
+                    return {
+                        ...prevUser,
+                        fname: firstName,
+                        lname: lastName,
+                        age: parseInt(age),
+                    };
+                });
+                setEditing(false);
+            }
+        );
     };
 
-    const saveChanges = () => {
-        // Save changes logic (e.g., API call)
-        console.log("Updated Data:", formData);
-        setUser({ ...formData });
-        setEditing(false);
+    const handleForgotPassword = () => {
+        const trimmedEmail = modalEmail.trim();
+
+        // Basic validation
+        if (!trimmedEmail) {
+            Alert.alert('Error', 'Please enter your email address.');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmedEmail)) {
+            Alert.alert('Error', 'Please enter a valid email address.');
+            return;
+        }
+
+        Post(
+            `${host}/users/forgot-password`,
+            { email: trimmedEmail },
+            (error) => Alert.alert('Error', error || 'An unexpected error occurred.'),
+            () => {
+                Alert.alert(
+                    'Success',
+                    'A password reset link has been sent to your email address.'
+                );
+                setIsModalVisible(false); // Close the modal on success
+            }
+        );
     };
 
     return (
-        <ScrollView style={[styles.container, { backgroundColor: globalStyle.colors.bgColor }]}>
-            <View style={styles.header}>
-                <Text style={[styles.title, { fontFamily: globalStyle.fontStyle.titleFont }]}>
-                    Edit Profile
-                </Text>
-                {editing && (
-                    <TouchableOpacity style={styles.saveButton} onPress={saveChanges}>
-                        <Text style={[styles.saveButtonText, { fontFamily: globalStyle.fontStyle.textFont }]}>
-                            SAVE
-                        </Text>
+        <View style={[styles.container, { backgroundColor: globalStyle.colors.bgColor }]}>
+            <Text style={[styles.title, { fontFamily: globalStyle.fontStyle.titleFont }]}>
+                Account Settings
+            </Text>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>First Name</Text>
+                <TextInput
+                    value={firstName}
+                    editable={editing}
+                    onChangeText={setFirstName}
+                    style={[styles.input, editing ? styles.editable : styles.readOnly]}
+                />
+            </View>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Last Name</Text>
+                <TextInput
+                    value={lastName}
+                    editable={editing}
+                    onChangeText={setLastName}
+                    style={[styles.input, editing ? styles.editable : styles.readOnly]}
+                />
+            </View>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Age</Text>
+                <TextInput
+                    value={age}
+                    editable={editing}
+                    onChangeText={setAge}
+                    keyboardType="numeric"
+                    style={[styles.input, editing ? styles.editable : styles.readOnly]}
+                />
+            </View>
+
+            <View style={styles.buttonContainer}>
+                {editing ? (
+                    <TouchableOpacity style={styles.button} onPress={handleSave}>
+                        <Text style={styles.buttonText}>Save</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity style={styles.button} onPress={() => setEditing(true)}>
+                        <Text style={styles.buttonText}>Edit</Text>
                     </TouchableOpacity>
                 )}
             </View>
 
-            {/* Profile Picture Section */}
-            <View style={styles.profileSection}>
-                <FontAwesome name="user-circle" size={80} color={globalStyle.colors.primary} />
-                <TouchableOpacity>
-                    <Text style={[styles.uploadText, { fontFamily: globalStyle.fontStyle.textFont }]}>
-                        Upload image
-                    </Text>
-                </TouchableOpacity>
-            </View>
+            {/* Forgot Password Button */}
+            <TouchableOpacity
+                style={[styles.button, { backgroundColor: globalStyle.colors.secondary }]}
+                onPress={() => setIsModalVisible(true)}
+            >
+                <Text style={styles.buttonText}>Forgot Password</Text>
+            </TouchableOpacity>
 
-            {/* Form Sections */}
-            <View style={styles.formSection}>
-                {/* First Name */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>First Name</Text>
-                    {editing ? (
+            {/* Forgot Password Modal */}
+            <Modal
+                visible={isModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setIsModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalTitle}>Forgot Password</Text>
                         <TextInput
-                            style={styles.input}
-                            value={formData.fname}
-                            onChangeText={(text) => handleInputChange("fname", text)}
+                            placeholder="Enter your email"
+                            placeholderTextColor="gray"
+                            value={modalEmail}
+                            onChangeText={setModalEmail}
+                            style={styles.modalInput}
                         />
-                    ) : (
-                        <Text style={styles.valueText}>{user.fname}</Text>
-                    )}
-                </View>
-
-                {/* Last Name */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Last Name</Text>
-                    {editing ? (
-                        <TextInput
-                            style={styles.input}
-                            value={formData.lname}
-                            onChangeText={(text) => handleInputChange("lname", text)}
-                        />
-                    ) : (
-                        <Text style={styles.valueText}>{user.lname}</Text>
-                    )}
-                </View>
-
-                {/* Age */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Age</Text>
-                    {editing ? (
-                        <TextInput
-                            style={styles.input}
-                            value={formData.age.toString()}
-                            keyboardType="numeric"
-                            onChangeText={(text) => handleInputChange("age", parseInt(text))}
-                        />
-                    ) : (
-                        <Text style={styles.valueText}>{user.age}</Text>
-                    )}
-                </View>
-
-                {/* Email */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Email</Text>
-                    {editing ? (
-                        <TextInput
-                            style={styles.input}
-                            value={formData.email}
-                            onChangeText={(text) => handleInputChange("email", text)}
-                        />
-                    ) : (
-                        <Text style={styles.valueText}>{user.email}</Text>
-                    )}
-                </View>
-
-                {/* Change Password Section */}
-                {editing && (
-                    <>
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Current Password</Text>
-                            <TextInput
-                                style={styles.input}
-                                secureTextEntry
-                                value={formData.currentPassword}
-                                onChangeText={(text) => handleInputChange("currentPassword", text)}
-                            />
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: globalStyle.colors.primary }]}
+                                onPress={handleForgotPassword}
+                            >
+                                <Text style={styles.modalButtonText}>Send Email</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: 'gray' }]}
+                                onPress={() => setIsModalVisible(false)}
+                            >
+                                <Text style={styles.modalButtonText}>Cancel</Text>
+                            </TouchableOpacity>
                         </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>New Password</Text>
-                            <TextInput
-                                style={styles.input}
-                                secureTextEntry
-                                value={formData.newPassword}
-                                onChangeText={(text) => handleInputChange("newPassword", text)}
-                            />
-                        </View>
-                    </>
-                )}
-            </View>
-
-            {/* Edit Button */}
-            {!editing && (
-                <TouchableOpacity
-                    style={[styles.editButton, { backgroundColor: globalStyle.colors.primary }]}
-                    onPress={() => setEditing(true)}
-                >
-                    <Text style={[styles.editButtonText, { fontFamily: globalStyle.fontStyle.textFont }]}>
-                        Edit
-                    </Text>
-                </TouchableOpacity>
-            )}
-        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
+        </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
-    container: {
+    container: { flex: 1, padding: 20 },
+    title: { fontSize: 24, color: '#fff', marginTop: 80, marginBottom: 20, textAlign: 'center' },
+    inputContainer: { marginBottom: 15 },
+    label: { fontSize: 16, color: '#fff', marginBottom: 5 },
+    input: { padding: 10, borderRadius: 5, backgroundColor: '#333', color: '#fff' },
+    readOnly: { backgroundColor: '#444' },
+    editable: { backgroundColor: '#555' },
+    buttonContainer: { marginTop: 20 },
+    button: { backgroundColor: '#FF0000', padding: 15, borderRadius: 5, marginBottom: 10 },
+    buttonText: { color: '#000', fontSize: 16, textAlign: 'center' },
+    modalOverlay: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+        width: '80%',
+        backgroundColor: 'white',
+        borderRadius: 10,
         padding: 20,
+        alignItems: 'center',
     },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-    title: {
-        fontSize: 24,
-        color: "#fff",
-    },
-    saveButton: {
-        backgroundColor: "#fff",
-        paddingHorizontal: 15,
-        paddingVertical: 5,
-        borderRadius: 5,
-    },
-    saveButtonText: {
-        color: "#000",
-        fontWeight: "bold",
-    },
-    profileSection: {
-        alignItems: "center",
-        marginVertical: 20,
-    },
-    uploadText: {
-        color: "#fff",
-        marginTop: 10,
-    },
-    formSection: {
-        marginTop: 20,
-    },
-    inputGroup: {
+    modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
+    modalInput: {
+        width: '100%',
+        borderBottomWidth: 1,
+        borderColor: 'gray',
+        padding: 8,
         marginBottom: 20,
-    },
-    label: {
-        color: "#fff",
-        fontSize: 16,
-        marginBottom: 5,
-    },
-    input: {
-        backgroundColor: "#333",
-        color: "#fff",
-        padding: 10,
-        borderRadius: 5,
-    },
-    valueText: {
-        color: "#aaa",
         fontSize: 16,
     },
-    editButton: {
-        paddingVertical: 15,
-        alignItems: "center",
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    modalButton: {
+        flex: 1,
+        marginHorizontal: 5,
         borderRadius: 5,
-        marginTop: 20,
+        paddingVertical: 10,
+        alignItems: 'center',
     },
-    editButtonText: {
-        color: "#fff",
-        fontSize: 18,
-        fontWeight: "bold",
-    },
+    modalButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+    errorText: { color: 'red', fontSize: 16, textAlign: 'center' },
 });
 
+export default AccountSettingPage;
