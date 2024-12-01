@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import Post from '../Fetchers/NoAuth/Post';
+import { host } from './index';
+import { useRouter } from 'expo-router';
 
 const ForgetPassword = () => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const router = useRouter()
 
     const handleResetPassword = () => {
         if (!newPassword || !confirmPassword) {
@@ -15,6 +19,12 @@ const ForgetPassword = () => {
             Alert.alert('Error', 'Passwords do not match.');
             return;
         }
+
+        Post(host + "/users/updatePassword",
+            { password: newPassword },
+            (error) => { Alert.alert(error) },
+            () => { router.replace("/") }
+        )
 
         // Proceed with password reset logic (e.g., API call)
         Alert.alert('Success', 'Password reset successfully!');
