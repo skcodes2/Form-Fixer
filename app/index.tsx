@@ -38,8 +38,13 @@ export default function Index() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState("")
-  const [modalEmail, setModalEmail] = useState(''); // for popup window
+  const [modalEmail, setModalEmail] = useState(''); // for popup window for email entering
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [forgotPassCode, setCode] = useState({ code: '', message: '' });
+
+  // code entering after user gets code from email for password reset
+  const [isCodeModalVisible, setIsCodeModalVisible] = useState(false);
+  const [resetCode, setResetCode] = useState("");
 
   const handleLogin = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -97,11 +102,27 @@ export default function Index() {
         console.log("Server responded");
         Alert.alert("Success", "Password reset email has been sent successfully.");
         setIsModalVisible(false);
-      }
+        setIsCodeModalVisible(true); // OPENS the code modal after user gets code from email
+      },
+      setCode
     );
 
   };
 
+  // handling verification code
+  const handleVerifyCode = () => {
+    if (!resetCode) {
+      Alert.alert("Error", "Please enter the reset code.");
+      return;
+    }
+    if (resetCode !== forgotPassCode.code) {
+      Alert.alert("Wrong password reset code, please try again");
+      return
+    }
+    router.replace("/forgetPassword")
+    Alert.alert("Success", "Code verified! Proceed to reset your password.");
+    setIsCodeModalVisible(false);
+  };
 
   return (
     <ImageBackground
@@ -193,7 +214,8 @@ export default function Index() {
                   style={[styles.modalButton, { backgroundColor: globalStyle.colors.primary }]}
                   onPress={handleForgotPwrd}
                 >
-                  <Text style={styles.modalButtonText}>Send Email</Text>
+                  <Text
+                    style={styles.modalButtonText}>Send Email</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, { backgroundColor: 'gray' }]}
@@ -206,6 +228,39 @@ export default function Index() {
           </View>
         </Modal>
 
+        <Modal
+          visible={isCodeModalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setIsCodeModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Enter Reset Code</Text>
+              <TextInput
+                placeholder="Enter the code from your email"
+                placeholderTextColor="gray"
+                value={resetCode}
+                onChangeText={setResetCode}
+                style={styles.modalInput}
+              />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: globalStyle.colors.primary }]}
+                  onPress={handleVerifyCode}
+                >
+                  <Text style={styles.modalButtonText}>Verify Code</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: 'gray' }]}
+                  onPress={() => setIsCodeModalVisible(false)}
+                >
+                  <Text style={styles.modalButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         <Text style={{ fontSize: globalStyle.fontSize.s, color: globalStyle.colors.primary }}>{error}</Text>
 

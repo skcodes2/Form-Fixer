@@ -1,20 +1,26 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Modal } from 'react-native';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
-import { Video } from 'expo-av'; // Optional: For video playback
+import { Video, ResizeMode } from 'expo-av'; // video preview library ***
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { useIsFocused } from '@react-navigation/native';
 
 export default function App() {
-    const device = useCameraDevice('back'); // Access the back camera
-    const { hasPermission, requestPermission } = useCameraPermission(); // Check camera permissions
-    const cameraRef = useRef<Camera>(null); // Reference to the camera
-    const [isRecording, setIsRecording] = useState(false); // Track recording state
-    const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions(); // Media library permissions
-    const isFocused = useIsFocused(); // Ensure the camera is active only when the screen is focused
+    const device = useCameraDevice('back'); // access to back camera of device
+    // check for perms from user
+    const { hasPermission, requestPermission } = useCameraPermission();
+    const [mediaLibraryPermission, requestMediaLibraryPermission] = MediaLibrary.usePermissions();
 
-    // Ensure media library permission is granted
+    const cameraRef = useRef<Camera>(null);
+    const [isRecording, setIsRecording] = useState(false); // track recording state
+    const isFocused = useIsFocused(); // camera only works if screen is focused
+
+    // previewing video states
+    const [recordedVideo, setRecordedVideo] = useState<string | null>(null); // store the recorded video URI
+    const [isPreviewVisible, setIsPreviewVisible] = useState(false); // control the preview modal visibility
+
+    // ensure media library perms granted to save videos
     if (!mediaLibraryPermission?.granted) {
         return (
             <PermissionsPage
@@ -24,29 +30,22 @@ export default function App() {
         );
     }
 
-    // Show permission request screen if permission is not granted
+    // handle no perms error
     if (!hasPermission) return <PermissionsPage requestPermission={requestPermission} />;
-
-    // Handle no camera device error
+    // handle no camera device error
     if (device == null) return <NoCameraDeviceError />;
 
-    // Function to handle video recording
+    // HANDLE RECORD
     const handleRecordVideo = async () => {
         try {
             if (!cameraRef.current) return;
             setIsRecording(true);
 
             await cameraRef.current.startRecording({
-                onRecordingFinished: async (video) => {
+                onRecordingFinished: (video) => {
                     setIsRecording(false);
-
-                    try {
-                        // Save video to media library
-                        const asset = await MediaLibrary.createAssetAsync(video.path);
-                        Alert.alert('Success', `Video saved to your library: ${asset.uri}`);
-                    } catch (error) {
-                        Alert.alert('Error', `Failed to save video: ${error}`);
-                    }
+                    setRecordedVideo(video.path); // Store the video path
+                    setIsPreviewVisible(true); // Show the preview modal
                 },
                 onRecordingError: (error) => {
                     setIsRecording(false);
@@ -59,11 +58,31 @@ export default function App() {
         }
     };
 
-    // Function to stop video recording
+    // HANDLE STOP RECORD
     const handleStopRecording = () => {
         if (cameraRef.current) {
             cameraRef.current.stopRecording();
         }
+    };
+
+    // HANDLE SAVE VIDEO
+    const handleSaveVideo = async () => {
+        try {
+            if (recordedVideo) {
+                const asset = await MediaLibrary.createAssetAsync(recordedVideo);
+                Alert.alert('Success', `Video saved to your library: ${asset.uri}`);
+                setIsPreviewVisible(false);
+                setRecordedVideo(null);
+            }
+        } catch (error) {
+            Alert.alert('Error', `Failed to save video: ${error}`);
+        }
+    };
+
+    // HANDLE DISCARD VIDEO
+    const handleDiscardVideo = () => {
+        setIsPreviewVisible(false);
+        setRecordedVideo(null);
     };
 
     return (
@@ -73,7 +92,7 @@ export default function App() {
                     style={StyleSheet.absoluteFill}
                     device={device}
                     ref={cameraRef}
-                    isActive={isFocused}
+                    isActive={isFocused && !isPreviewVisible}
                     video={true}
                 />
             )}
@@ -89,6 +108,28 @@ export default function App() {
                     </TouchableOpacity>
                 )}
             </View>
+
+            {isPreviewVisible && recordedVideo && (
+                <Modal visible={isPreviewVisible} animationType="slide">
+                    <View style={styles.previewContainer}>
+                        <Video
+                            source={{ uri: recordedVideo }}
+                            style={styles.video}
+                            resizeMode={ResizeMode.CONTAIN}
+                            shouldPlay
+                            isLooping
+                        />
+                        <View style={styles.previewControls}>
+                            <TouchableOpacity onPress={handleSaveVideo} style={styles.saveButton}>
+                                <Text style={styles.buttonText}>Save</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={handleDiscardVideo} style={styles.discardButton}>
+                                <Text style={styles.buttonText}>Discard</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+            )}
         </View>
     );
 }
@@ -158,6 +199,32 @@ const styles = StyleSheet.create({
     },
     permissionButton: {
         backgroundColor: '#007AFF',
+        padding: 15,
+        borderRadius: 10,
+    },
+    previewContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'black',
+    },
+    video: {
+        width: '100%',
+        height: '80%',
+    },
+    previewControls: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%',
+        padding: 20,
+    },
+    saveButton: {
+        backgroundColor: 'green',
+        padding: 15,
+        borderRadius: 10,
+    },
+    discardButton: {
+        backgroundColor: 'red',
         padding: 15,
         borderRadius: 10,
     },
