@@ -78,7 +78,7 @@ export default function Settings() {
                     <FontAwesome name="chevron-right" size={18} color={globalStyle.colors.secondary} />
                 </TouchableOpacity>
 
-                {/* Notification Section */}
+
                 <TouchableOpacity
                     style={styles.menuItem}
                     onPress={() => toggleDropdown('notification')}

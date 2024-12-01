@@ -17,7 +17,7 @@ export default function Home() {
                                     source={require('../../assets/images/graph.png')}
                                     style={styles.icon}
                                 />
-                                <Text style={[styles.formNumber, styles.leftFormText]}>5</Text>
+                                <Text style={[styles.formNumber, styles.leftFormText]}>4</Text>
                             </View>
                             <Text style={[styles.formLabel, styles.leftFormText]}>Forms Mastered</Text>
                         </View>
