@@ -34,10 +34,25 @@
       [
         "react-native-vision-camera",
         {
-          "cameraPermissionText": "FormFixer needs access to your Camera."
+          "cameraPermissionText": "FormFixer needs access to your Camera.",
+          "enableFrameProcessors": true
         }
       ],
-      "expo-router"
+      "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 26,
+            "buildToolsVersion": "35.0.0"
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
