@@ -121,8 +121,9 @@ function Video(): JSX.Element {
         [plugin, paint, minConfidence, lowerBodyConfidenceThreshold],
     );
 
-    if (!hasPermission) return <Text>Please grant camera permission to continue.</Text>;
-    if (device == null) return <Text>No camera device available.</Text>;
+    // Permissions handling
+    if (!hasPermission) return <PermissionsPage requestPermission={requestPermission} />;
+    if (device == null) return <NoCameraDeviceError />;
 
     return (
         <View style={styles.container}>
@@ -179,6 +180,31 @@ function Video(): JSX.Element {
     );
 }
 
+// Permissions page
+type PermissionsPageProps = {
+    requestPermission: () => void;
+};
+const PermissionsPage: React.FC<PermissionsPageProps> = ({ requestPermission }) => (
+    <View style={styles.centeredContainer}>
+        <Text style={styles.text}>
+            Camera access is required to use this feature.
+        </Text>
+        <Text style={styles.text}>Please grant permission.</Text>
+        <Text style={styles.link} onPress={requestPermission}>
+            Grant Permission
+        </Text>
+    </View>
+);
+// Component for handling missing camera device
+const NoCameraDeviceError = () => (
+    <View style={styles.centeredContainer}>
+        <Text style={styles.text}>No camera device found!</Text>
+        <Text style={styles.text}>
+            Please ensure your device has a working camera.
+        </Text>
+    </View>
+);
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -192,6 +218,21 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         padding: 10,
         borderRadius: 10,
+    },
+    centeredContainer: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    text: {
+        fontSize: 18,
+        textAlign: 'center',
+    },
+    link: {
+        fontSize: 18,
+        color: '#007AFF',
+        fontWeight: 'bold',
+        marginTop: 20,
+        textAlign: 'center',
     },
     confidenceText: {
         color: 'white',
