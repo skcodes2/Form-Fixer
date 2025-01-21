@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Switch, Platform } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker'; // For selecting images
+import * as ImagePicker from 'expo-image-picker';
 import useGlobalStyle from '../hooks/GlobalStyleContext';
 import { useRouter } from 'expo-router';
 import useUser from '../hooks/UserContext';
@@ -56,60 +56,74 @@ export default function Settings() {
     };
 
     const pickImage = async () => {
-        // Request media library permissions
-        if (Platform.OS !== 'web') {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Permission Required', 'We need permission to access your gallery to update the profile picture.');
-                return;
+        try {
+            // Request media library permissions
+            if (Platform.OS !== 'web') {
+                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (status !== 'granted') {
+                    Alert.alert('Permission Required', 'We need permission to access your gallery to update the profile picture.');
+                    return;
+                }
             }
-        }
 
-        // Launch image picker
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
+            // Open image picker
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.All, // Updated to MediaTypeOptions.All
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 1,
+            });
 
-        if (!result.cancelled) {
-            setProfileImage(result.uri); // Update local state to show the selected image
-            uploadProfilePicture(result.uri); // Upload the selected image
+            if (!result.canceled && result.assets && result.assets[0]?.uri) {
+                const selectedImage = result.assets[0].uri;
+                setProfileImage(selectedImage); // Update the profile image
+                await uploadProfilePicture(selectedImage); // Upload the image
+            } else {
+                Alert.alert('Error', 'No image was selected.');
+            }
+        } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Error', 'Unable to select an image. Please try again.');
         }
     };
-
     const uploadProfilePicture = async (imageUri: string) => {
-        const formData = new FormData();
-        const fileName = imageUri.split('/').pop() || 'profile_picture.jpg';
-
-        formData.append('profilePicture', {
-            uri: imageUri,
-            name: fileName,
-            type: 'image/jpeg',
-        } as any);
-
         try {
+            const formData = new FormData();
+            const fileName = imageUri.split("/").pop() || "profile_picture.jpg";
+
+            formData.append("profilePicture", {
+                uri: imageUri,
+                name: fileName,
+                type: "image/jpeg",
+            } as any);
+
             const response = await fetch(`${host}/users/update-profile-picture`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data',
+                    // 'Content-Type' must NOT be set manually for FormData
                 },
                 body: formData,
             });
 
+            // Check for server errors
+            if (!response.ok) {
+                const errorText = await response.text(); // Read the raw response text
+                console.error("Server error response:", errorText);
+                throw new Error(`Failed to upload profile picture. Server responded with: ${errorText}`);
+            }
+
+            // Parse JSON response
             const data = await response.json();
 
-            if (response.ok) {
-                Alert.alert('Success', 'Profile picture updated successfully!');
-                setUser({ ...user, profilePicture: data.imageUrl }); // Update user context
-            } else {
-                Alert.alert('Error', data.error || 'Failed to update profile picture.');
-            }
+            // Notify the user of success
+            Alert.alert("Success", "Profile picture updated successfully!");
+
+            // Update user context with the new profile picture URL
+            setUser({ ...user, profilePicture: data.imageUrl });
         } catch (error) {
-            console.error('Error uploading profile picture:', error);
-            Alert.alert('Error', 'Something went wrong. Please try again.');
+            console.error("Error uploading profile picture:", error.message);
+            Alert.alert("Error", "Something went wrong while uploading your profile picture. Please try again.");
         }
     };
 
@@ -118,14 +132,18 @@ export default function Settings() {
             <View style={styles.header}>
                 <TouchableOpacity onPress={pickImage}>
                     <Image
-                        source={profileImage ? { uri: profileImage } : require('../../assets/images/profile.png')}
+                        source={
+                            profileImage
+                                ? { uri: profileImage }
+                                : require('../../assets/images/profile.png') // Ensure this path is correct
+                        }
                         style={styles.profileImage}
                     />
                 </TouchableOpacity>
                 <Text style={[styles.userName, { fontFamily: globalStyle.fontStyle.textFont }]}>
-                    {user?.fname} {user?.lname}
+                    {user?.fname || 'User'} {user?.lname || ''}
                 </Text>
-                <TouchableOpacity style={styles.editIcon} onPress={() => pickImage()}>
+                <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
                     <FontAwesome name="edit" size={18} color={globalStyle.colors.primary} />
                 </TouchableOpacity>
             </View>
@@ -163,8 +181,6 @@ export default function Settings() {
                         />
                     </View>
                 )}
-
-                {/* Additional sections like Privacy, About, Terms & Conditions */}
 
                 <TouchableOpacity style={styles.menuItem} onPress={handleSignOut}>
                     <Text
