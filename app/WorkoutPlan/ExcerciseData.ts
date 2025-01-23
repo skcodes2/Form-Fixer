@@ -25,12 +25,6 @@ const ExerciseData = {
             "timePerRep": 1.5,
             "url": ""
         },
-        {
-            "name": "Cable Crossover",
-            "description": "Stand between two cable pulleys and pull the handles together in front of you to target the chest.",
-            "timePerRep": 2.5,
-            "url": ""
-        }
     ],
 
     Back: [
@@ -59,7 +53,7 @@ const ExerciseData = {
             "url": ""
         },
         {
-            "name": "T-Bar Rows",
+            "name": "Rows",
             "description": "Use a T-bar row machine or barbell setup to pull the weight toward your torso.",
             "timePerRep": 2,
             "url": ""
