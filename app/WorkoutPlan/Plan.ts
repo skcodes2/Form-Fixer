@@ -10,9 +10,8 @@ export default class Plan implements WorkoutPlanType {
     private routines: RoutineType[];
     private readonly maxRoutines: number = 5;
 
-    constructor(name: string, description: string, routines: RoutineType[]) {
+    constructor(name: string, routines: RoutineType[]) {
         this.name = name;
-
         this.routines = routines;
     }
 
