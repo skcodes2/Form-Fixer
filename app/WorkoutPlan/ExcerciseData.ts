@@ -164,6 +164,18 @@ export function getMuscleGroupData(muscleGroup: MuscleGroup) {
     }
 }
 
+
+export function getExerciseByName(name: string, exercises: ExerciseDataType[]): ExerciseDataType {
+    let exer: ExerciseDataType | null = null;
+    exercises.forEach(element => {
+        if (element.name === name) exer = element;
+    });
+    if (exer === null) {
+        throw new Error(`Exercise with name ${name} not found`);
+    }
+    return exer;
+}
+
 export const ImageMap: Record<string, any> = {
     '../../assets/images/workout/benchPress.jpg': require('../../assets/images/workout/benchPress.jpg'),
     '../../assets/images/workout/inclineBenchPress.jpg': require('../../assets/images/workout/inclineBenchPress.jpg'),

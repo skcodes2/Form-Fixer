@@ -1,11 +1,13 @@
 import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
-import { getMuscleGroupData } from '../ExcerciseData';
-import { ExerciseDataType } from '../types/PlanTypes';
+import { getMuscleGroupData, getExerciseByName } from '../ExcerciseData';
+import { ExerciseDataType, MuscleGroup, WorkoutParameters } from '../types/PlanTypes';
 import Exercise from './Exercise';
+import ExerciseClass from '../Exercise';
 import { Dropdown } from 'react-native-element-dropdown';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import CustomModal from './Modal';
 
 export default function ExercisePage() {
   const [muscleGroupData, setMuscleGroupData] = useState<ExerciseDataType[]>(getMuscleGroupData('Chest'));
@@ -16,8 +18,28 @@ export default function ExercisePage() {
     { label: 'Legs', value: 'Legs' },
     { label: 'Arms', value: 'Arms' },
   ];
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [workoutParameters, setWorkoutParameters] = useState([{ reps: null, sets: null, weight: null, restTime: null }]);
   const router = useRouter();
-  const [dropdownValue, setDropdownValue] = useState(null);
+  const [dropdownValue, setDropdownValue] = useState<MuscleGroup>("Chest");
+  const [excerciseName, setExerciseName] = useState("")
+  console.log(dropdownValue)
+
+
+  function onConfirm() {
+    if (workoutParameters[0] && workoutParameters[1] && workoutParameters[2] && workoutParameters[3]) {
+      setModalVisible(false);
+      const parameters: WorkoutParameters = { reps: Number(workoutParameters[0]), sets: Number(workoutParameters[1]), weight: Number(workoutParameters[2]), restTime: Number(workoutParameters[3]) }
+      const exerciseData = getExerciseByName(excerciseName, muscleGroupData)
+      const exercise = new ExerciseClass(exerciseData, parameters, dropdownValue)
+      router.replace("/(tabs)/WorkoutPlan")
+      //create Exercise object and add it to the list
+    }
+    else {
+      setModalVisible(true);
+      alert("Please fill all the fields")
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -29,7 +51,10 @@ export default function ExercisePage() {
           source={require('../../../assets/images/workout/dumbell.png')} // Replace with your dumbbell icon path
           style={styles.icon}
         />
+
         <Text style={styles.headerText}>Add Exercise</Text>
+
+
       </View>
       <View style={styles.separator} />
 
@@ -51,10 +76,33 @@ export default function ExercisePage() {
         )}
       />
 
+      <CustomModal
+        title="Add Exercise"
+        inputPlaceholder={['Reps', 'Sets', 'Weight (lb)', "Rest Time (sec)"]}
+        icon={['repeat', 'autorenew', 'fitness-center', 'timer']}
+        handleConfirm={() => {
+          onConfirm();
+        }}
+        handleBack={() => setModalVisible(false)}
+        isModalVisible={isModalVisible}
+        setModalVisible={setModalVisible}
+        data={workoutParameters}
+        setData={setWorkoutParameters}
+      />
+
 
       {muscleGroupData.map((exerciseData, index) => {
-        return <Exercise key={index} exerciseData={exerciseData} />;
+        return (
+          <Exercise key={index}
+            exerciseData={exerciseData}
+            addExercise={() => {
+              setExerciseName(exerciseData.name)
+              setModalVisible(true)
+            }}
+          />)
       })}
+
+
 
       <View style={styles.footer}>
         <TouchableOpacity onPress={() => router.replace("/(tabs)/WorkoutPlan")} style={styles.BackButton}>

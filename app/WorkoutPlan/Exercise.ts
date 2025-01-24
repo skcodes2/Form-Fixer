@@ -3,7 +3,7 @@ import { MuscleGroup } from "./types/PlanTypes";
 import { WorkoutParameters } from "./types/PlanTypes";
 import { ExerciseDataType } from "./types/PlanTypes";
 
-export default class Exercise implements ExerciseType {
+export default class ExerciseClass implements ExerciseType {
 
     private name: string;
     private sets: number;

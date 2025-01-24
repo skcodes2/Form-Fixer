@@ -1,14 +1,12 @@
-import React, { act, useState } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    TextInput,
-    Modal,
-    Pressable,
 } from 'react-native';
+import CustomModal from 'app/WorkoutPlan/components/Modal';
 import { useRouter } from 'expo-router';
 import { Dropdown } from 'react-native-element-dropdown';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -32,7 +30,6 @@ const WorkoutPlan = () => {
         if (newRoutineName.trim()) {
             setRoutines([...routines, newRoutineName.trim()]);
             setNewRoutineName('');
-            setModalVisible(false);
         } else {
             alert('Please enter a routine name.');
         }
@@ -64,6 +61,16 @@ const WorkoutPlan = () => {
                 </TouchableOpacity>
             </View>
 
+            <CustomModal
+                title="New Routine"
+                inputPlaceholder={["Routine Name"]}
+                icon={["access-time"]}
+                handleConfirm={handleAddRoutine}
+                isModalVisible={isModalVisible}
+                setModalVisible={setModalVisible}
+                data={newRoutineName}
+                setData={setNewRoutineName}
+            />
 
             <View style={styles.routinesContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.routineScroll}>
@@ -121,34 +128,7 @@ const WorkoutPlan = () => {
             </View>
 
 
-            <Modal
-                animationType="fade"
-                transparent={true}
-                visible={isModalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <Pressable style={styles.modalBackground} onPress={() => setModalVisible(false)}>
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitle}>Add New Routine</Text>
-                        <View style={styles.inputContainer}>
-                            <MaterialIcons name="access-time" size={24} color="white" />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Routine Name"
-                                placeholderTextColor="#ccc"
-                                value={newRoutineName}
-                                onChangeText={setNewRoutineName}
-                            />
-                        </View>
-                        <TouchableOpacity
-                            style={styles.addRoutineButton}
-                            onPress={handleAddRoutine}
-                        >
-                            <Text style={styles.addRoutineButtonText}>Add Routine</Text>
-                        </TouchableOpacity>
-                    </View>
-                </Pressable>
-            </Modal>
+
         </View>
     );
 };
@@ -266,25 +246,6 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
     },
-    modalBackground: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContainer: {
-        backgroundColor: 'black',
-        width: '80%',
-        padding: 20,
-        borderRadius: 16,
-        alignItems: 'center',
-    },
-    modalTitle: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 16,
-    },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -300,19 +261,34 @@ const styles = StyleSheet.create({
         marginLeft: 8,
         flex: 1,
     },
-    addRoutineButton: {
+
+    routineScroll: {
+        flexDirection: 'row',
+    },
+    confirmButton: {
         backgroundColor: '#F50707',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 16,
     },
-    addRoutineButtonText: {
+    confirmButtonText: {
         color: 'white',
         fontWeight: 'bold',
-        fontSize: 16,
     },
-    routineScroll: {
-        flexDirection: 'row',
+    addedExercise: {
+        backgroundColor: '#444',
+        padding: 10,
+        marginVertical: 5,
+        borderRadius: 8,
+    },
+    addedExerciseText: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    addedExerciseDetails: {
+        color: 'white',
+        fontSize: 14,
     },
 });
 

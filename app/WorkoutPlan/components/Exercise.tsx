@@ -3,18 +3,21 @@ import React from 'react';
 import { ExerciseDataType } from '../types/PlanTypes';
 import { ImageMap } from '../ExcerciseData';
 
-export default function Exercise({ exerciseData }: { exerciseData: ExerciseDataType }) {
+type ExerciseProps = {
+    exerciseData: ExerciseDataType;
+    addExercise: () => void;
+};
+
+export default function Exercise({ exerciseData, addExercise }: ExerciseProps) {
     return (
         <View style={styles.container}>
-
             <Image source={ImageMap[exerciseData.url]} style={styles.image} />
 
             <Text style={styles.name}>{exerciseData.name}</Text>
 
-            <TouchableOpacity style={styles.addButton}>
+            <TouchableOpacity onPress={addExercise} style={styles.addButton}>
                 <Text style={styles.addButtonText}>Add</Text>
             </TouchableOpacity>
-
         </View>
     );
 }

@@ -4,7 +4,7 @@ export interface RoutineType {
     removeExercise: (exercise: ExerciseType) => void
     getExercises: () => ExerciseType[]
     getName: () => string
-    getDuration: () => number  //need to change to string
+    getDuration: () => number
     removeAllExercises: () => void
     resetCompleteness: () => void
     getTotalRoutineTime: () => number
