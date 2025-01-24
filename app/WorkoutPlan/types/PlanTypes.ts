@@ -23,7 +23,7 @@ export type ExerciseType = {
     getRestTime: () => number
     setCompleted: (completed: boolean) => void
     Completed: () => boolean
-    getExerciseType: () => exercises
+    getExerciseType: () => MuscleGroup
     getUrl: () => string
     getTimePerRep: () => number
     getTotalExerciseTime: () => number
@@ -45,4 +45,11 @@ export type WorkoutParameters = {
     restTime: number | null,
 }
 
-export type exercises = "Chest" | "Back" | "Legs" | "Arms" | "Shoulders"; 
+export type MuscleGroup = "Chest" | "Back" | "Legs" | "Arms" | "Shoulders";
+
+export interface ExerciseDataType {
+    name: string; // Name of the exercise
+    description: string; // Description of the exercise
+    timePerRep: number; // Time per repetition (in seconds)
+    url: string; // URL to the image
+}

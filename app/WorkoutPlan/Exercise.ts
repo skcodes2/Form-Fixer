@@ -1,6 +1,7 @@
 import { ExerciseType } from "./types/PlanTypes";
-import { exercises } from "./types/PlanTypes";
+import { MuscleGroup } from "./types/PlanTypes";
 import { WorkoutParameters } from "./types/PlanTypes";
+import { ExerciseDataType } from "./types/PlanTypes";
 
 export default class Exercise implements ExerciseType {
 
@@ -12,20 +13,20 @@ export default class Exercise implements ExerciseType {
     private restTime: number;
     private timePerRep: number;
     private isCompleted: boolean;
-    private exerciseType: exercises
-    private url: string
+    private exerciseType: MuscleGroup;
+    private url: string;
 
-    constructor(name: string, workoutParameters: WorkoutParameters, exerciseType: exercises, url: string, timePerRep: number, description: string) {
-        this.name = name;
+    constructor(exerciseData: ExerciseDataType, workoutParameters: WorkoutParameters, exerciseType: MuscleGroup) {
+        this.name = exerciseData.name;
         this.sets = workoutParameters?.sets as number;
         this.reps = workoutParameters?.reps as number;
         this.weight = workoutParameters?.weight as number;
         this.restTime = workoutParameters?.restTime as number;
         this.isCompleted = false;
         this.exerciseType = exerciseType;
-        this.url = url
-        this.timePerRep = timePerRep
-        this.description = description
+        this.url = exerciseData.url
+        this.timePerRep = exerciseData.timePerRep
+        this.description = exerciseData.description
     }
 
     updateExercise(workoutParameters: WorkoutParameters): void {
@@ -59,7 +60,7 @@ export default class Exercise implements ExerciseType {
         return this.url
     }
 
-    getExerciseType(): exercises {
+    getExerciseType(): MuscleGroup {
         return this.exerciseType;
     }
 
