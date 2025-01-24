@@ -9,6 +9,7 @@ import {
     Modal,
     Pressable,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Dropdown } from 'react-native-element-dropdown';
 import { MaterialIcons } from '@expo/vector-icons';
 import RoutineButton from '../WorkoutPlan/components/RoutineButton';
@@ -19,6 +20,8 @@ const WorkoutPlan = () => {
     const [isModalVisible, setModalVisible] = useState(false);
     const [newRoutineName, setNewRoutineName] = useState('');
     const [activeRoutine, setActiveRoutine] = useState<string | null>(null)
+    const router = useRouter();
+
     const dropdownData = [
         { label: 'Edit Routine', value: 'edit' },
         { label: 'Delete Routine', value: 'delete' },
@@ -92,12 +95,12 @@ const WorkoutPlan = () => {
 
             <View style={styles.totalInfo}>
                 <Text style={styles.totalText}>Total of {routines.length} | 64mins</Text>
-                <View style={styles.addExerciseButton}>
+                <TouchableOpacity onPress={() => router.replace("../WorkoutPlan/components/ExercisePage")} style={styles.addExerciseButton}>
                     <Text style={styles.addExerciseText}>+ Add Exercise</Text>
-                </View>
+                </TouchableOpacity>
             </View>
 
-            {/* Exercise List */}
+
             <ScrollView style={styles.exerciseList}>
                 <View style={styles.exerciseCard}>
                     <Text style={styles.placeholderText}>Custom Exercise Component</Text>

@@ -1,12 +1,13 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import React from 'react';
 import { ExerciseDataType } from '../types/PlanTypes';
+import { ImageMap } from '../ExcerciseData';
 
 export default function Exercise({ exerciseData }: { exerciseData: ExerciseDataType }) {
     return (
         <View style={styles.container}>
 
-            <Image source={{ uri: exerciseData.url }} style={styles.image} />
+            <Image source={ImageMap[exerciseData.url]} style={styles.image} />
 
             <Text style={styles.name}>{exerciseData.name}</Text>
 
