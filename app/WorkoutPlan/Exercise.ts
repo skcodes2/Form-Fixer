@@ -29,6 +29,7 @@ export default class Exercise implements ExerciseType {
         this.description = exerciseData.description
     }
 
+
     updateExercise(workoutParameters: WorkoutParameters): void {
         if (workoutParameters.sets !== null) {
             this.setSets(workoutParameters.sets);
