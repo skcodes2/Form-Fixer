@@ -11,13 +11,16 @@ import { useRouter } from 'expo-router';
 import { Dropdown } from 'react-native-element-dropdown';
 import { MaterialIcons } from '@expo/vector-icons';
 import RoutineButton from '../WorkoutPlan/components/RoutineButton';
+import Routine from '../WorkoutPlan/Routine';
+import { RoutineType } from '../WorkoutPlan/types/PlanTypes';
 
 const WorkoutPlan = () => {
     const [dropdownValue, setDropdownValue] = useState(null);
-    const [routines, setRoutines] = useState(['Routine 1', 'Routine 2', 'Routine 3', 'Routine 4']);
+    const defualtRoutine = new Routine("Routine 1", null)
+    const [routines, setRoutines] = useState<RoutineType[]>([defualtRoutine]);
     const [isModalVisible, setModalVisible] = useState(false);
     const [newRoutineName, setNewRoutineName] = useState('');
-    const [activeRoutine, setActiveRoutine] = useState<string | null>(null)
+    const [activeRoutine, setActiveRoutine] = useState<RoutineType | null>(defualtRoutine)
     const router = useRouter();
 
     const dropdownData = [
@@ -28,9 +31,10 @@ const WorkoutPlan = () => {
 
     const handleAddRoutine = () => {
         if (newRoutineName.trim()) {
-            setRoutines([...routines, newRoutineName.trim()]);
+            setRoutines([...routines, new Routine(newRoutineName, null)]);
             setNewRoutineName('');
         } else {
+            setModalVisible(true)
             alert('Please enter a routine name.');
         }
     };
@@ -77,16 +81,16 @@ const WorkoutPlan = () => {
                     {routines.map((routine, index) => (
                         <RoutineButton
                             key={index}
-                            name={routine}
+                            name={routine.getName()}
                             onClose={() => {
                                 if (routines.length === 1) {
                                     return alert('Cannot delete the last routine');
                                 }
                                 setRoutines(routines.filter((ele) => ele !== routine));
-                                if (activeRoutine === routine) setActiveRoutine(null); // Reset active if deleted
+                                if (activeRoutine?.getName() === routine.getName()) setActiveRoutine(null); // Reset active if deleted
                             }}
                             onPress={() => setActiveRoutine(routine)} // Set active routine
-                            isActive={activeRoutine === routine} // Pass active state
+                            isActive={activeRoutine?.getName() === routine.getName()} // Pass active state
                         />
                     ))}
                 </ScrollView>
