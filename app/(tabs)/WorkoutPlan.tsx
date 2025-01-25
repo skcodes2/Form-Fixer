@@ -13,14 +13,14 @@ import { MaterialIcons } from '@expo/vector-icons';
 import RoutineButton from '../WorkoutPlan/components/RoutineButton';
 import Routine from '../WorkoutPlan/Routine';
 import { RoutineType } from '../WorkoutPlan/types/PlanTypes';
+import useWorkoutPlan from 'app/hooks/WorkoutPlanContext';
 
 const WorkoutPlan = () => {
     const [dropdownValue, setDropdownValue] = useState(null);
-    const defualtRoutine = new Routine("Routine 1", null)
-    const [routines, setRoutines] = useState<RoutineType[]>([defualtRoutine]);
+    const { defaultRoutine, activeRoutine, setActiveRoutine } = useWorkoutPlan()
+    const [routines, setRoutines] = useState<RoutineType[]>([defaultRoutine]);
     const [isModalVisible, setModalVisible] = useState(false);
     const [newRoutineName, setNewRoutineName] = useState('');
-    const [activeRoutine, setActiveRoutine] = useState<RoutineType | null>(defualtRoutine)
     const router = useRouter();
 
     const dropdownData = [
