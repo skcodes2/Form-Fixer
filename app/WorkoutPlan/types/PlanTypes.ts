@@ -1,9 +1,10 @@
+import ExerciseClass from "../Exercise"
 import Routine from "../Routine"
 
 export interface RoutineType {
-    addExercise: (exercise: ExerciseType) => Routine
-    removeExercise: (exercise: ExerciseType) => Routine
-    getExercises: () => ExerciseType[]
+    addExercise: (exercise: ExerciseClass) => Routine
+    removeExercise: (exercise: ExerciseClass) => Routine
+    getExercises: () => ExerciseClass[]
     getName: () => string
     getDuration: () => number
     removeAllExercises: () => Routine

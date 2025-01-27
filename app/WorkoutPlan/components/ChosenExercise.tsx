@@ -1,15 +1,25 @@
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import React from 'react';
 import { ImageMap } from '../ExcerciseData';
 import { ExerciseType } from '../types/PlanTypes';
+import { useRouter } from 'expo-router';
+import useWorkoutPlan from 'app/hooks/WorkoutPlanContext';
+import ExerciseClass from '../Exercise';
 
 interface ChosenExerciseProps {
-  exercise: ExerciseType;
+  exercise: ExerciseClass;
 }
 
 export default function ChosenExercise({ exercise }: ChosenExerciseProps) {
+  const router = useRouter()
+  const { setChosenExercise } = useWorkoutPlan()
   return (
-    <View style={styles.container}>
+    <TouchableOpacity onPress={() => {
+      router.replace("/WorkoutPlan/components/UpdateExercisePage")
+      setChosenExercise(exercise)
+
+    }}
+      style={styles.container}>
 
       <Image
         source={ImageMap[exercise.getUrl()]}
@@ -33,7 +43,7 @@ export default function ChosenExercise({ exercise }: ChosenExerciseProps) {
       <View style={styles.iconContainer}>
         <Text style={styles.icon}>{'>'}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

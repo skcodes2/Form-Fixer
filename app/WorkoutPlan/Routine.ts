@@ -1,20 +1,21 @@
+import ExerciseClass from "./Exercise";
 import { RoutineType } from "./types/PlanTypes";
 import { ExerciseType } from "./types/PlanTypes";
 
 export default class Routine implements RoutineType {
 
-    private exercises: ExerciseType[] | null;
+    private exercises: ExerciseClass[] | null;
     private name: string;
     private duration: number;
 
 
-    constructor(name: string, exercises: ExerciseType[] | null) {
+    constructor(name: string, exercises: ExerciseClass[] | null) {
         this.name = name;
         this.exercises = exercises ?? [];
         this.duration = this.getTotalRoutineTime();
     }
 
-    addExercise(exercise: ExerciseType): Routine {
+    addExercise(exercise: ExerciseClass): Routine {
         const newExercises = [exercise, ...(this.exercises || [])];
         return new Routine(this.name, newExercises);
     }
@@ -32,7 +33,7 @@ export default class Routine implements RoutineType {
         this.duration += exercise.getTotalExerciseTime();
     }
 
-    removeExercise(exercise: ExerciseType): Routine {
+    removeExercise(exercise: ExerciseClass): Routine {
         // Ensure exercises is not null and find the index of the exercise
         const index = this.exercises?.indexOf(exercise);
 
@@ -51,15 +52,13 @@ export default class Routine implements RoutineType {
 
     resetCompleteness(): Routine {
         const updatedExercises = this.exercises?.map((exercise) => {
-            const updatedExercise = { ...exercise };
-            updatedExercise.setCompleted(true);
-            return updatedExercise;
+            return exercise.setCompleted(false); // Use the setCompleted method to return a new instance
         }) ?? [];
 
         return new Routine(this.name, updatedExercises);
     }
 
-    getExercises(): ExerciseType[] {
+    getExercises(): ExerciseClass[] {
         return this.exercises ?? [];
     }
 

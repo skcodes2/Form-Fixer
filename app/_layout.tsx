@@ -41,6 +41,7 @@ export default function RootLayout() {
             <Stack.Screen name='register' options={{ headerShown: false }} />
             <Stack.Screen name='AccountSettingPage' />
             <Stack.Screen name='WorkoutPlan/components/ExercisePage' options={{ headerShown: false }} />
+            <Stack.Screen name='WorkoutPlan/components/UpdateExercisePage' options={{ headerShown: false }} />
             <Stack.Screen name='forgetPassword' />
           </Stack>
           <StatusBar style="auto" />

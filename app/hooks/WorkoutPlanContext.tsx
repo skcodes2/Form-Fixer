@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { RoutineType } from '../WorkoutPlan/types/PlanTypes';
 import Routine from '../WorkoutPlan/Routine';
+import ExerciseClass from 'app/WorkoutPlan/Exercise';
 
 
 
@@ -10,7 +11,8 @@ interface WorkoutPlanContextType {
     setActiveRoutine: React.Dispatch<React.SetStateAction<Routine | null>>
     routines: Routine[]
     setRoutines: React.Dispatch<React.SetStateAction<Routine[]>>
-
+    chosenExercise: ExerciseClass | undefined
+    setChosenExercise: React.Dispatch<React.SetStateAction<ExerciseClass | undefined>>
 }
 
 // Create the context with a default value
@@ -21,9 +23,10 @@ export const WorkoutPlanProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const defaultRoutine = new Routine("Routine 1", null)
     const [activeRoutine, setActiveRoutine] = useState<Routine | null>(defaultRoutine)
     const [routines, setRoutines] = useState<Routine[]>([defaultRoutine]);
+    const [chosenExercise, setChosenExercise] = useState<ExerciseClass | undefined>(undefined)
 
     return (
-        <WorkoutPlanContext.Provider value={{ activeRoutine, setActiveRoutine, setRoutines, routines }}>
+        <WorkoutPlanContext.Provider value={{ activeRoutine, setActiveRoutine, setRoutines, routines, chosenExercise, setChosenExercise }}>
             {children}
         </WorkoutPlanContext.Provider>
     );

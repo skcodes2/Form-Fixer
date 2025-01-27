@@ -64,6 +64,7 @@ export default function CustomModal({
                                 style={styles.input}
                                 placeholder={placeholder}
                                 placeholderTextColor="#ccc"
+                                keyboardType="numeric"
                                 value={Array.isArray(data) ? data[index] : data}
                                 onChangeText={(text) => {
                                     if (inputPlaceholder.length === 1) {
