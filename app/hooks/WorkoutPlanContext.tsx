@@ -6,9 +6,11 @@ import Routine from '../WorkoutPlan/Routine';
 
 // Define the structure of the context value
 interface WorkoutPlanContextType {
-    activeRoutine: RoutineType | null;
-    setActiveRoutine: (activeRoutine: RoutineType) => void;
-    defaultRoutine: RoutineType
+    activeRoutine: Routine | null;
+    setActiveRoutine: React.Dispatch<React.SetStateAction<Routine | null>>
+    routines: Routine[]
+    setRoutines: React.Dispatch<React.SetStateAction<Routine[]>>
+
 }
 
 // Create the context with a default value
@@ -17,10 +19,11 @@ const WorkoutPlanContext = createContext<WorkoutPlanContextType | undefined>(und
 // Create the provider component
 export const WorkoutPlanProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const defaultRoutine = new Routine("Routine 1", null)
-    const [activeRoutine, setActiveRoutine] = useState<RoutineType | null>(defaultRoutine) // State for workout plan
+    const [activeRoutine, setActiveRoutine] = useState<Routine | null>(defaultRoutine)
+    const [routines, setRoutines] = useState<Routine[]>([defaultRoutine]);
 
     return (
-        <WorkoutPlanContext.Provider value={{ activeRoutine, setActiveRoutine, defaultRoutine }}>
+        <WorkoutPlanContext.Provider value={{ activeRoutine, setActiveRoutine, setRoutines, routines }}>
             {children}
         </WorkoutPlanContext.Provider>
     );

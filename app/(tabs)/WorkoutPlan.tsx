@@ -12,17 +12,17 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { MaterialIcons } from '@expo/vector-icons';
 import RoutineButton from '../WorkoutPlan/components/RoutineButton';
 import Routine from '../WorkoutPlan/Routine';
-import { RoutineType } from '../WorkoutPlan/types/PlanTypes';
 import useWorkoutPlan from 'app/hooks/WorkoutPlanContext';
+import ChosenExercise from 'app/WorkoutPlan/components/ChosenExercise';
 
 const WorkoutPlan = () => {
     const [dropdownValue, setDropdownValue] = useState(null);
-    const { defaultRoutine, activeRoutine, setActiveRoutine } = useWorkoutPlan()
-    const [routines, setRoutines] = useState<RoutineType[]>([defaultRoutine]);
+    const { activeRoutine, setActiveRoutine, routines, setRoutines } = useWorkoutPlan()
     const [isModalVisible, setModalVisible] = useState(false);
     const [newRoutineName, setNewRoutineName] = useState('');
     const router = useRouter();
-
+    console.log(activeRoutine)
+    console.log(routines)
     const dropdownData = [
         { label: 'Edit Routine', value: 'edit' },
         { label: 'Delete Routine', value: 'delete' },
@@ -38,6 +38,20 @@ const WorkoutPlan = () => {
             alert('Please enter a routine name.');
         }
     };
+
+    function handleRemoveAll() {
+        if (activeRoutine) {
+            let removedRoutineExercises = activeRoutine.removeAllExercises()
+            setActiveRoutine(removedRoutineExercises);
+            setRoutines((prevRoutines) =>
+                prevRoutines.map((routine) =>
+                    routine.getName() === activeRoutine.getName() ? removedRoutineExercises : routine
+                )
+            );
+        } else {
+            setActiveRoutine(null); // Fallback if activeRoutine is undefined
+        }
+    }
 
     return (
         <View style={styles.container}>
@@ -105,7 +119,7 @@ const WorkoutPlan = () => {
 
 
             <View style={styles.totalInfo}>
-                <Text style={styles.totalText}>Total of {routines.length} | 64mins</Text>
+                <Text style={styles.totalText}>Total of {activeRoutine?.getExercises().length} Exercises | {activeRoutine?.getTotalRoutineTime()} min</Text>
                 <TouchableOpacity onPress={() => router.replace("../WorkoutPlan/components/ExercisePage")} style={styles.addExerciseButton}>
                     <Text style={styles.addExerciseText}>+ Add Exercise</Text>
                 </TouchableOpacity>
@@ -113,19 +127,16 @@ const WorkoutPlan = () => {
 
 
             <ScrollView style={styles.exerciseList}>
-                <View style={styles.exerciseCard}>
-                    <Text style={styles.placeholderText}>Custom Exercise Component</Text>
-                </View>
-                <View style={styles.exerciseCard}>
-                    <Text style={styles.placeholderText}>Custom Exercise Component</Text>
-                </View>
+                {activeRoutine?.getExercises().map((exercise, index) => (
+                    <ChosenExercise key={index} exercise={exercise} />
+                ))}
             </ScrollView>
 
 
             <View style={styles.footer}>
-                <View style={styles.footerButton}>
+                <TouchableOpacity onPress={handleRemoveAll} style={styles.footerButton}>
                     <Text style={styles.footerButtonText}>Remove All</Text>
-                </View>
+                </TouchableOpacity>
                 <View style={styles.footerButton}>
                     <Text style={styles.footerButtonText}>Rest</Text>
                 </View>
