@@ -7,15 +7,16 @@ export default class Routine implements RoutineType {
     private name: string;
     private duration: number;
 
+
     constructor(name: string, exercises: ExerciseType[] | null) {
         this.name = name;
-        this.exercises = exercises;
+        this.exercises = exercises ?? [];
         this.duration = this.getTotalRoutineTime();
     }
 
-    addExercise(exercise: ExerciseType): void {
-        this.exercises?.unshift(exercise);
-        this.updateDuration(exercise)
+    addExercise(exercise: ExerciseType): Routine {
+        const newExercises = [exercise, ...(this.exercises || [])];
+        return new Routine(this.name, newExercises);
     }
     //return number in seconds 
     getTotalRoutineTime(): number {
@@ -23,27 +24,39 @@ export default class Routine implements RoutineType {
         this.exercises?.forEach(exercise => {
             totalTime += exercise.getTotalExerciseTime();
         });
-        return totalTime;
+
+        return totalTime / 60;
     }
 
     updateDuration(exercise: ExerciseType) {
         this.duration += exercise.getTotalExerciseTime();
     }
 
-    removeExercise(exercise: ExerciseType): void {
+    removeExercise(exercise: ExerciseType): Routine {
+        // Ensure exercises is not null and find the index of the exercise
         const index = this.exercises?.indexOf(exercise);
+
         if (index !== undefined && index > -1) {
-            this.exercises?.splice(index, 1);
-            this.updateDuration(exercise)
+            // Create a new array without the exercise to remove
+            const newExercises = [...(this.exercises ?? [])];
+            newExercises.splice(index, 1);
+
+            // Return a new Routine object with the updated exercises and recalculated duration
+            const newRoutine = new Routine(this.name, newExercises);
+            return newRoutine;
         } else {
             throw new Error("Exercise not found.");
         }
     }
 
-    resetCompleteness(): void {
-        this.exercises?.forEach(exercise => {
-            exercise.setCompleted(true);
-        });
+    resetCompleteness(): Routine {
+        const updatedExercises = this.exercises?.map((exercise) => {
+            const updatedExercise = { ...exercise };
+            updatedExercise.setCompleted(true);
+            return updatedExercise;
+        }) ?? [];
+
+        return new Routine(this.name, updatedExercises);
     }
 
     getExercises(): ExerciseType[] {
@@ -58,8 +71,7 @@ export default class Routine implements RoutineType {
         return this.duration;
     }
 
-    removeAllExercises(): void {
-        this.exercises = [];
+    removeAllExercises(): Routine {
+        return new Routine(this.name, [])
     }
-
 }

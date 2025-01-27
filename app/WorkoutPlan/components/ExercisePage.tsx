@@ -1,16 +1,19 @@
 import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
 import { getMuscleGroupData, getExerciseByName } from '../ExcerciseData';
-import { ExerciseDataType, MuscleGroup, WorkoutParameters } from '../types/PlanTypes';
+import { ExerciseDataType, MuscleGroup, RoutineType, WorkoutParameters } from '../types/PlanTypes';
 import Exercise from './Exercise';
 import ExerciseClass from '../Exercise';
 import { Dropdown } from 'react-native-element-dropdown';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import CustomModal from './Modal';
+import useWorkoutPlan from 'app/hooks/WorkoutPlanContext';
+import Routine from '../Routine';
 
 export default function ExercisePage() {
   const [muscleGroupData, setMuscleGroupData] = useState<ExerciseDataType[]>(getMuscleGroupData('Chest'));
+  const { activeRoutine, setRoutines, setActiveRoutine } = useWorkoutPlan()
   const dropdownData = [
     { label: 'Chest', value: 'Chest' },
     { label: 'Back', value: 'Back' },
@@ -23,21 +26,33 @@ export default function ExercisePage() {
   const router = useRouter();
   const [dropdownValue, setDropdownValue] = useState<MuscleGroup>("Chest");
   const [excerciseName, setExerciseName] = useState("")
-  console.log(dropdownValue)
-
 
   function onConfirm() {
     if (workoutParameters[0] && workoutParameters[1] && workoutParameters[2] && workoutParameters[3]) {
       setModalVisible(false);
-      const parameters: WorkoutParameters = { reps: Number(workoutParameters[0]), sets: Number(workoutParameters[1]), weight: Number(workoutParameters[2]), restTime: Number(workoutParameters[3]) }
-      const exerciseData = getExerciseByName(excerciseName, muscleGroupData)
-      const exercise = new ExerciseClass(exerciseData, parameters, dropdownValue)
-      router.replace("/(tabs)/WorkoutPlan")
-      //create Exercise object and add it to the list
-    }
-    else {
+      const parameters: WorkoutParameters = {
+        reps: Number(workoutParameters[0]),
+        sets: Number(workoutParameters[1]),
+        weight: Number(workoutParameters[2]),
+        restTime: Number(workoutParameters[3]),
+      };
+      const exerciseData = getExerciseByName(excerciseName, muscleGroupData);
+
+      if (activeRoutine) {
+        let updatedActiveRoutine = activeRoutine.addExercise(new ExerciseClass(exerciseData, parameters, dropdownValue));
+        setActiveRoutine(updatedActiveRoutine)
+        // Update the routines array with a new instance
+        setRoutines((prevRoutines: Routine[]) => {
+          return prevRoutines.map((routine) =>
+            routine.getName() === activeRoutine.getName() ? updatedActiveRoutine : routine
+          );
+        });
+      }
+
+      router.replace("/(tabs)/WorkoutPlan");
+    } else {
       setModalVisible(true);
-      alert("Please fill all the fields")
+      alert("Please fill all the fields");
     }
   }
 

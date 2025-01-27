@@ -1,34 +1,35 @@
+import Routine from "../Routine"
 
 export interface RoutineType {
-    addExercise: (exercise: ExerciseType) => void
-    removeExercise: (exercise: ExerciseType) => void
+    addExercise: (exercise: ExerciseType) => Routine
+    removeExercise: (exercise: ExerciseType) => Routine
     getExercises: () => ExerciseType[]
     getName: () => string
     getDuration: () => number
-    removeAllExercises: () => void
-    resetCompleteness: () => void
+    removeAllExercises: () => Routine
+    resetCompleteness: () => Routine
     getTotalRoutineTime: () => number
 }
 
 export type ExerciseType = {
-    getName: () => string,
-    setName: (name: string) => void,
-    getSets: () => number,
-    setSets: (sets: number) => void,
-    getReps: () => number,
-    setReps: (reps: number) => void,
-    getWeight: () => number,
-    setWeight: (weight: number) => void
-    setRestTime: (restTime: number) => void
-    getRestTime: () => number
-    setCompleted: (completed: boolean) => void
-    Completed: () => boolean
-    getExerciseType: () => MuscleGroup
-    getUrl: () => string
-    getTimePerRep: () => number
-    getTotalExerciseTime: () => number
-    getDescription: () => string
-}
+    getName: () => string;
+    setName: (name: string) => ExerciseType;
+    getSets: () => number;
+    setSets: (sets: number) => ExerciseType;
+    getReps: () => number;
+    setReps: (reps: number) => ExerciseType;
+    getWeight: () => number;
+    setWeight: (weight: number) => ExerciseType;
+    getRestTime: () => number;
+    setRestTime: (restTime: number) => ExerciseType;
+    getDescription: () => string;
+    Completed: () => boolean;
+    setCompleted: (completed: boolean) => ExerciseType;
+    getExerciseType: () => MuscleGroup;
+    getTimePerRep: () => number;
+    getUrl: () => string;
+    getTotalExerciseTime: () => number;
+};
 
 export interface WorkoutPlanType {
     addRoutine: (routine: RoutineType) => void
