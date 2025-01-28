@@ -10,10 +10,16 @@ import { useRouter } from 'expo-router';
 import CustomModal from './Modal';
 import useWorkoutPlan from 'app/hooks/WorkoutPlanContext';
 import Routine from '../Routine';
+import Plan from '../Plan';
 
 export default function ExercisePage() {
   const [muscleGroupData, setMuscleGroupData] = useState<ExerciseDataType[]>(getMuscleGroupData('Chest'));
-  const { activeRoutine, setRoutines, setActiveRoutine } = useWorkoutPlan()
+  const { activeRoutine, setRoutines, setActiveRoutine, setWorkoutPlans, activePlan } = useWorkoutPlan()
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [workoutParameters, setWorkoutParameters] = useState([{ reps: null, sets: null, weight: null, restTime: null }]);
+  const router = useRouter();
+  const [dropdownValue, setDropdownValue] = useState<MuscleGroup>("Chest");
+  const [excerciseName, setExerciseName] = useState("")
   const dropdownData = [
     { label: 'Chest', value: 'Chest' },
     { label: 'Back', value: 'Back' },
@@ -21,11 +27,6 @@ export default function ExercisePage() {
     { label: 'Legs', value: 'Legs' },
     { label: 'Arms', value: 'Arms' },
   ];
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [workoutParameters, setWorkoutParameters] = useState([{ reps: null, sets: null, weight: null, restTime: null }]);
-  const router = useRouter();
-  const [dropdownValue, setDropdownValue] = useState<MuscleGroup>("Chest");
-  const [excerciseName, setExerciseName] = useState("")
 
   function onConfirm() {
     if (workoutParameters[0] && workoutParameters[1] && workoutParameters[2] && workoutParameters[3]) {
@@ -43,9 +44,16 @@ export default function ExercisePage() {
         setActiveRoutine(updatedActiveRoutine)
         // Update the routines array with a new instance
         setRoutines((prevRoutines: Routine[]) => {
-          return prevRoutines.map((routine) =>
+          let newRoutines = prevRoutines.map((routine) =>
             routine.getName() === activeRoutine.getName() ? updatedActiveRoutine : routine
           );
+          setWorkoutPlans(prevPlans => (
+            prevPlans.map(plan => (
+              plan.getName() === activePlan.getName() ? new Plan(activePlan.getName(), newRoutines) : plan
+            ))
+          ))
+
+          return newRoutines
         });
       }
 

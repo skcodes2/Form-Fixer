@@ -33,11 +33,11 @@ export type ExerciseType = {
 };
 
 export interface WorkoutPlanType {
-    addRoutine: (routine: RoutineType) => void
+    addRoutine: (routine: Routine) => void
     removeRoutine: (routine: RoutineType) => void
     getName: () => string
     setName: (name: string) => void
-    getRoutines: () => RoutineType[]
+    getRoutines: () => Routine[]
 }
 
 export type WorkoutParameters = {

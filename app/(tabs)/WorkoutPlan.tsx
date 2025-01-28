@@ -1,4 +1,4 @@
-import React, { act, useState } from 'react';
+import React, { act, useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -14,55 +14,74 @@ import RoutineButton from '../WorkoutPlan/components/RoutineButton';
 import Routine from '../WorkoutPlan/Routine';
 import useWorkoutPlan from 'app/hooks/WorkoutPlanContext';
 import ChosenExercise from 'app/WorkoutPlan/components/ChosenExercise';
+import Plan from 'app/WorkoutPlan/Plan';
+
 
 const WorkoutPlan = () => {
-    const [dropdownValue, setDropdownValue] = useState(null);
-    const { activeRoutine, setActiveRoutine, routines, setRoutines } = useWorkoutPlan()
+    const [dropdownValue, setDropdownValue] = useState("");
+    const { activeRoutine, setActiveRoutine, routines, setRoutines, workoutPlans, setWorkoutPlans, setActivePlan } = useWorkoutPlan()
     const [isModalVisible, setModalVisible] = useState(false);
+    // console.log(workoutPlans)
+    // console.log(workoutPlans[0].getRoutines())
     const [newRoutineName, setNewRoutineName] = useState('');
     const router = useRouter();
-    const dropdownData = [
-        { label: 'Edit Routine', value: 'edit' },
-        { label: 'Delete Routine', value: 'delete' },
-        { label: 'Share Routine', value: 'share' },
-    ];
 
-    const handleAddRoutine = () => {
-        if (newRoutineName.trim()) {
-            setRoutines([...routines, new Routine(newRoutineName, null)]);
-            setNewRoutineName('');
-        } else {
-            setModalVisible(true)
-            alert('Please enter a routine name.');
-        }
+    const updateRoutineList = (updatedRoutine: Routine) => {
+        setRoutines(prevRoutines =>
+            prevRoutines.map(routine =>
+                routine.getName() === activeRoutine?.getName() ? updatedRoutine : routine
+            )
+        );
+        updateWorkoutPlans(updatedRoutine);
     };
 
-    function handleRemoveAll() {
-        if (activeRoutine) {
-            let removedRoutineExercises = activeRoutine.removeAllExercises()
-            setActiveRoutine(removedRoutineExercises);
-            setRoutines((prevRoutines) =>
-                prevRoutines.map((routine) =>
-                    routine.getName() === activeRoutine.getName() ? removedRoutineExercises : routine
-                )
-            );
-        } else {
-            setActiveRoutine(null); // Fallback if activeRoutine is undefined
-        }
-    }
+    const updateWorkoutPlans = (newRoutine: Routine) => {
+        setWorkoutPlans(prevPlans =>
+            prevPlans.map(plan =>
+                plan.getName() === dropdownValue ?
+                    new Plan(plan.getName(), [...plan.getRoutines(), newRoutine]) :
+                    plan
+            )
+        );
+    };
 
-    function handleReset() {
-        if (activeRoutine) {
-            let newActiveRoutine = activeRoutine?.resetCompleteness()
-            setActiveRoutine(newActiveRoutine)
-            setRoutines(prevRoutines => (
-                prevRoutines.map(routine => (
-                    newActiveRoutine.getName() === routine.getName() ? newActiveRoutine : routine
-                ))
-            ))
+    // Usage example in `handleRemoveAll`
+    const handleRemoveAll = () => {
+        if (!activeRoutine) return;
+        const updatedRoutine = activeRoutine.removeAllExercises();
+        setActiveRoutine(updatedRoutine);
+        updateRoutineList(updatedRoutine);
+        updateWorkoutPlans(updatedRoutine)
+    };
+    const handleAddRoutine = () => {
+        if (!newRoutineName.trim()) {
+            setModalVisible(true);
+            alert('Please enter a routine name.');
+            return;
         }
 
-    }
+        const newRoutine = new Routine(newRoutineName, null);
+        const updatedRoutines = [...routines, newRoutine];
+
+        setRoutines(updatedRoutines);
+        updateWorkoutPlans(newRoutine);
+        setNewRoutineName('');
+    };
+
+    // Usage example in `handleReset`
+    const handleReset = () => {
+        if (!activeRoutine) return;
+        const updatedRoutine = activeRoutine.resetCompleteness();
+        setActiveRoutine(updatedRoutine);
+        updateRoutineList(updatedRoutine);
+        updateWorkoutPlans(updatedRoutine)
+    };
+    useEffect(() => {
+        if (workoutPlans.length > 0) {
+            setDropdownValue(workoutPlans[0].getName()); // Set the first plan as default
+            setRoutines(workoutPlans[0].getRoutines()); // Set routines based on default plan
+        }
+    }, []);
 
     return (
         <View style={styles.container}>
@@ -73,14 +92,21 @@ const WorkoutPlan = () => {
                     containerStyle={styles.dropdownContainer}
                     placeholderStyle={styles.dropdownPlaceholder}
                     selectedTextStyle={styles.dropdownSelectedText}
-                    data={dropdownData}
+                    data={workoutPlans.map(plan => ({ label: plan.getName(), value: plan.getName() }))}
                     activeColor="#F50707"
                     itemTextStyle={{ color: 'white' }}
                     labelField="label"
                     valueField="value"
                     placeholder="Your Workout Plan"
                     value={dropdownValue}
-                    onChange={(item) => setDropdownValue(item.value)}
+                    onChange={(item) => {
+                        const selectedPlan = workoutPlans.find(plan => plan.getName() === item.value);
+                        if (selectedPlan) {
+                            setDropdownValue(item.value); // Update dropdown selection
+                            setRoutines(selectedPlan.getRoutines())
+                            setActivePlan(selectedPlan)
+                        }
+                    }}
                     renderLeftIcon={() => (
                         <MaterialIcons name="access-time" size={24} color="white" style={styles.clockIcon} />
                     )}
@@ -113,7 +139,7 @@ const WorkoutPlan = () => {
                                     return alert('Cannot delete the last routine');
                                 }
                                 setRoutines(routines.filter((ele) => ele !== routine));
-                                if (activeRoutine?.getName() === routine.getName()) setActiveRoutine(null); // Reset active if deleted
+                                if (activeRoutine?.getName() === routine.getName()) setActiveRoutine(null);
                             }}
                             onPress={() => setActiveRoutine(routine)} // Set active routine
                             isActive={activeRoutine?.getName() === routine.getName()} // Pass active state
@@ -132,7 +158,7 @@ const WorkoutPlan = () => {
 
             <View style={styles.totalInfo}>
                 <Text style={styles.totalText}>Total of {activeRoutine?.getExercises().length} Exercises | {activeRoutine?.getTotalRoutineTime()} min</Text>
-                <TouchableOpacity onPress={() => router.replace("../WorkoutPlan/components/ExercisePage")} style={styles.addExerciseButton}>
+                <TouchableOpacity onPress={() => { router.replace("../WorkoutPlan/components/ExercisePage") }} style={styles.addExerciseButton}>
                     <Text style={styles.addExerciseText}>+ Add Exercise</Text>
                 </TouchableOpacity>
             </View>
@@ -150,11 +176,9 @@ const WorkoutPlan = () => {
                     <Text style={styles.footerButtonText}>Remove All</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleReset} style={styles.footerButton}>
-                    <Text style={styles.footerButtonText}>Rest</Text>
+                    <Text style={styles.footerButtonText}>Reset</Text>
                 </TouchableOpacity>
             </View>
-
-
 
         </View>
     );

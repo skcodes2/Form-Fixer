@@ -5,9 +5,10 @@ import { ImageMap } from "../ExcerciseData";
 import { useRouter } from "expo-router";
 import { WorkoutParameters } from "../types/PlanTypes";
 import Routine from "../Routine";
+import Plan from "../Plan";
 
 export default function UpdateExercisePage() {
-    const { setChosenExercise, chosenExercise, setRoutines, setActiveRoutine, activeRoutine } = useWorkoutPlan();
+    const { setChosenExercise, chosenExercise, setRoutines, setActiveRoutine, activeRoutine, setWorkoutPlans, activePlan } = useWorkoutPlan();
     const [workoutParameters, setWorkoutParameters] = useState<WorkoutParameters>({
         sets: chosenExercise?.getSets() ?? null,
         reps: chosenExercise?.getReps() ?? null,
@@ -16,69 +17,61 @@ export default function UpdateExercisePage() {
     });
     const router = useRouter();
 
-    const handleUpdate = () => {
-        if (chosenExercise && activeRoutine) {
-            let updatedExercise = chosenExercise.updateExercise(workoutParameters);
-
-            let updatedActiveRoutineExercise = activeRoutine
-                .getExercises()
-                .map((exercise) =>
-                    updatedExercise.getName() === exercise.getName() ? updatedExercise : exercise
-                );
-
-            let newActiveRoutine = new Routine(
-                activeRoutine.getName(),
-                updatedActiveRoutineExercise
-            );
-
-            setActiveRoutine(newActiveRoutine); // Update the active routine
-            setRoutines((prevRoutines) =>
-                prevRoutines.map((routine) =>
-                    routine.getName() === activeRoutine.getName() ? newActiveRoutine : routine
-                )
-            );
-
-            setChosenExercise(updatedExercise); // Update the chosen exercise
-        }
+    const updateWorkoutPlans = (newRoutine: Routine) => {
+        setWorkoutPlans(prevPlans =>
+            prevPlans.map(plan =>
+                plan.getName() === activePlan.getName() ?
+                    new Plan(plan.getName(), [...plan.getRoutines(), newRoutine]) :
+                    plan
+            )
+        );
     };
 
-    function handleDiscardExercise() {
-        if (activeRoutine && chosenExercise) {
-            let updatedActiveRoutine = activeRoutine.removeExercise(chosenExercise)
-            setActiveRoutine(updatedActiveRoutine)
-            setRoutines((prevRoutines) =>
-                prevRoutines.map((routine) =>
-                    routine.getName() === activeRoutine.getName() ? updatedActiveRoutine : routine
-                )
-            );
-            router.replace("/(tabs)/WorkoutPlan")
-        }
-    }
+    // Utility function to update the routine list
+    const updateRoutineList = (updatedRoutine: Routine) => {
+        setActiveRoutine(updatedRoutine);
+        setRoutines(prevRoutines =>
+            prevRoutines.map(routine => (routine.getName() === activeRoutine?.getName() ? updatedRoutine : routine))
+        );
+    };
 
-    function handleComplete() {
-        if (chosenExercise && activeRoutine) {
-            let newExercise = chosenExercise.setCompleted(true)
-            let updatedActiveRoutineExercise = [
-                ...activeRoutine
-                    .getExercises()
-                    .filter((exercise) => newExercise.getName() !== exercise.getName()), // Keep all exercises except the one with the same name
-                newExercise // Add the updated exercise to the end
-            ];
-            console.log(newExercise)
-            console.log(updatedActiveRoutineExercise)
-            let newActiveRoutine = new Routine(activeRoutine.getName(), updatedActiveRoutineExercise)
-            setActiveRoutine(newActiveRoutine)
+    // Handles exercise update
+    const handleUpdate = () => {
+        if (!chosenExercise || !activeRoutine) return;
+        const updatedExercise = chosenExercise.updateExercise(workoutParameters);
+        const updatedRoutine = new Routine(
+            activeRoutine.getName(),
+            activeRoutine.getExercises().map(exercise =>
+                updatedExercise.getName() === exercise.getName() ? updatedExercise : exercise
+            )
+        );
+        updateRoutineList(updatedRoutine);
+        updateWorkoutPlans(updatedRoutine)
+        setChosenExercise(updatedExercise);
+    };
 
-            setRoutines((prevRoutines) =>
-                prevRoutines.map((routine) =>
-                    routine.getName() === activeRoutine.getName() ? newActiveRoutine : routine
-                )
-            );
+    // Handles exercise removal
+    const handleDiscardExercise = () => {
+        if (!chosenExercise || !activeRoutine) return;
+        const updatedRoutine = activeRoutine.removeExercise(chosenExercise);
+        updateRoutineList(updatedRoutine);
+        updateWorkoutPlans(updatedRoutine)
+        router.replace("/(tabs)/WorkoutPlan");
+    };
 
-            setChosenExercise(newExercise);
-            router.replace("/(tabs)/WorkoutPlan")
-        }
-    }
+    // Handles exercise completion
+    const handleComplete = () => {
+        if (!chosenExercise || !activeRoutine) return;
+        const updatedExercise = chosenExercise.setCompleted(true);
+        const updatedRoutine = new Routine(activeRoutine.getName(), [
+            ...activeRoutine.getExercises().filter(exercise => exercise.getName() !== updatedExercise.getName()),
+            updatedExercise, // Move updated exercise to the end
+        ]);
+        updateRoutineList(updatedRoutine);
+        updateWorkoutPlans(updatedRoutine)
+        setChosenExercise(updatedExercise);
+        router.replace("/(tabs)/WorkoutPlan");
+    };
 
     return (
         <View style={styles.container}>
@@ -94,53 +87,33 @@ export default function UpdateExercisePage() {
             <Text style={styles.description}>{chosenExercise?.getDescription()}</Text>
 
             <View style={styles.inputContainer}>
-                <View style={styles.inputFieldContainer}>
-                    <Text style={styles.inputLabel}>Number of Sets</Text>
-                    <TextInput
-                        style={styles.input}
-                        keyboardType="numeric"
-                        value={String(workoutParameters.sets ?? '')}
-                        onChangeText={(text) =>
-                            setWorkoutParameters((prev) => ({ ...prev, sets: Number(text) }))
-                        }
-                    />
-                </View>
-                <View style={styles.inputFieldContainer}>
-                    <Text style={styles.inputLabel}>Number of Reps</Text>
-                    <TextInput
-                        style={styles.input}
-                        keyboardType="numeric"
-                        value={String(workoutParameters.reps ?? '')}
-                        onChangeText={(text) =>
-                            setWorkoutParameters((prev) => ({ ...prev, reps: Number(text) }))
-                        }
-                    />
-                </View>
+                {(["sets", "reps"] as (keyof WorkoutParameters)[]).map((key, index) => (
+                    <View key={index} style={styles.inputFieldContainer}>
+                        <Text style={styles.inputLabel}>{key === "sets" ? "Number of Sets" : "Number of Reps"}</Text>
+                        <TextInput
+                            style={styles.input}
+                            keyboardType="numeric"
+                            value={String(workoutParameters[key] ?? '')}
+                            onChangeText={text => setWorkoutParameters(prev => ({ ...prev, [key]: Number(text) }))}
+                        />
+                    </View>
+                ))}
             </View>
 
             <View style={styles.inputContainer}>
-                <View style={styles.inputFieldContainer}>
-                    <Text style={styles.inputLabel}>Rest Time</Text>
-                    <TextInput
-                        style={styles.input}
-                        keyboardType="numeric"
-                        value={String(workoutParameters.restTime ?? '')}
-                        onChangeText={(text) =>
-                            setWorkoutParameters((prev) => ({ ...prev, restTime: Number(text) }))
-                        }
-                    />
-                </View>
-                <View style={styles.inputFieldContainer}>
-                    <Text style={styles.inputLabel}>Weight (lb)</Text>
-                    <TextInput
-                        style={styles.input}
-                        keyboardType="numeric"
-                        value={String(workoutParameters.weight ?? '')}
-                        onChangeText={(text) =>
-                            setWorkoutParameters((prev) => ({ ...prev, weight: Number(text) }))
-                        }
-                    />
-                </View>
+                {(["restTime", "weight"] as (keyof WorkoutParameters)[]).map((key, index) => (
+                    <View key={index} style={styles.inputFieldContainer}>
+                        <Text style={styles.inputLabel}>
+                            {key === "restTime" ? "Rest Time" : "Weight (lb)"}
+                        </Text>
+                        <TextInput
+                            style={styles.input}
+                            keyboardType="numeric"
+                            value={String(workoutParameters[key] ?? '')}
+                            onChangeText={text => setWorkoutParameters(prev => ({ ...prev, [key]: Number(text) }))}
+                        />
+                    </View>
+                ))}
             </View>
 
             <View style={styles.buttonContainer}>
@@ -164,17 +137,17 @@ export default function UpdateExercisePage() {
     );
 }
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#2A2424",
         padding: 16,
-
     },
     headerContainer: {
         alignItems: "center",
         marginBottom: 16,
-        marginTop: 25
+        marginTop: 25,
     },
     title: {
         color: "white",
