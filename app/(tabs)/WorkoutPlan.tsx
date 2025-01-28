@@ -1,10 +1,12 @@
-import React, { act, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     ScrollView,
     TouchableOpacity,
+    Modal,
+    Pressable,
 } from 'react-native';
 import CustomModal from 'app/WorkoutPlan/components/Modal';
 import { useRouter } from 'expo-router';
@@ -18,13 +20,16 @@ import Plan from 'app/WorkoutPlan/Plan';
 
 
 const WorkoutPlan = () => {
+    const { activeRoutine, setActiveRoutine, routines, setRoutines, workoutPlans, setWorkoutPlans, setActivePlan, activePlan } = useWorkoutPlan()
     const [dropdownValue, setDropdownValue] = useState("");
-    const { activeRoutine, setActiveRoutine, routines, setRoutines, workoutPlans, setWorkoutPlans, setActivePlan } = useWorkoutPlan()
     const [isModalVisible, setModalVisible] = useState(false);
-    // console.log(workoutPlans)
-    // console.log(workoutPlans[0].getRoutines())
     const [newRoutineName, setNewRoutineName] = useState('');
     const router = useRouter();
+    const [isMenuVisible, setMenuVisible] = useState(false);
+    const [isAddPlanVisible, setAddPlanVisible] = useState(false);
+    const [newPlanName, setNewPlanName] = useState('');
+    const [isRenameModelVisible, setRenameModelVisible] = useState(false);
+    console.log(routines)
 
     const updateRoutineList = (updatedRoutine: Routine) => {
         setRoutines(prevRoutines =>
@@ -39,7 +44,7 @@ const WorkoutPlan = () => {
         setWorkoutPlans(prevPlans =>
             prevPlans.map(plan =>
                 plan.getName() === dropdownValue ?
-                    new Plan(plan.getName(), [...plan.getRoutines(), newRoutine]) :
+                    new Plan(plan.getName(), [...plan.getRoutines().filter(routine => routine.getName() != newRoutine.getName()), newRoutine]) :
                     plan
             )
         );
@@ -76,10 +81,64 @@ const WorkoutPlan = () => {
         updateRoutineList(updatedRoutine);
         updateWorkoutPlans(updatedRoutine)
     };
+    const deleteCurrentPlan = () => {
+        if (workoutPlans.length === 1) {
+            return alert('Cannot delete the last plan');
+        }
+        const updatedPlans = workoutPlans.filter(plan => plan.getName() !== dropdownValue);
+        setWorkoutPlans(updatedPlans);
+        setDropdownValue(updatedPlans[0].getName());
+        setRoutines(updatedPlans[0].getRoutines());
+        setActivePlan(updatedPlans[0]);
+        setActiveRoutine(updatedPlans[0].getRoutines()[0]);
+        setMenuVisible(false);
+    }
+    const handleAddPlan = () => {
+        if (!newPlanName.trim()) {
+            setAddPlanVisible(true);
+            alert('Please enter a plan name.');
+            return;
+        }
+
+        const newPlan = new Plan(newPlanName, [new Routine('Routine 1', null)]);
+        const updatedPlans = [...workoutPlans, newPlan];
+
+        setWorkoutPlans(updatedPlans);
+        setDropdownValue(newPlanName);
+        setRoutines(newPlan.getRoutines());
+        setActiveRoutine(newPlan.getRoutines()[0]);
+        setActivePlan(newPlan);
+        setNewPlanName('');
+        setMenuVisible(false)
+        setNewPlanName('');
+    }
+
+    const handleRenamePlan = () => {
+        if (!newPlanName.trim()) {
+            setRenameModelVisible(true);
+            alert('Please enter a plan name.');
+            return;
+        }
+
+        const updatedPlans = workoutPlans.map(plan => (
+            plan.getName() === dropdownValue ? new Plan(newPlanName, plan.getRoutines()) : plan
+        ));
+
+        setWorkoutPlans(updatedPlans);
+        setDropdownValue(newPlanName);
+        const newActivePlan = updatedPlans.find(plan => plan.getName() === newPlanName);
+        if (newActivePlan) {
+            setActivePlan(newActivePlan);
+        }
+        setRenameModelVisible(false);
+        setNewPlanName('');
+    }
+
     useEffect(() => {
         if (workoutPlans.length > 0) {
             setDropdownValue(workoutPlans[0].getName()); // Set the first plan as default
             setRoutines(workoutPlans[0].getRoutines()); // Set routines based on default plan
+
         }
     }, []);
 
@@ -98,12 +157,13 @@ const WorkoutPlan = () => {
                     labelField="label"
                     valueField="value"
                     placeholder="Your Workout Plan"
-                    value={dropdownValue}
+                    value={activePlan.getName()}
                     onChange={(item) => {
                         const selectedPlan = workoutPlans.find(plan => plan.getName() === item.value);
                         if (selectedPlan) {
                             setDropdownValue(item.value); // Update dropdown selection
                             setRoutines(selectedPlan.getRoutines())
+                            setActiveRoutine(selectedPlan.getRoutines()[0])
                             setActivePlan(selectedPlan)
                         }
                     }}
@@ -111,7 +171,7 @@ const WorkoutPlan = () => {
                         <MaterialIcons name="access-time" size={24} color="white" style={styles.clockIcon} />
                     )}
                 />
-                <TouchableOpacity style={styles.menuButton}>
+                <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuButton}>
                     <Text style={styles.menuDots}>⋮</Text>
                 </TouchableOpacity>
             </View>
@@ -127,6 +187,46 @@ const WorkoutPlan = () => {
                 setData={setNewRoutineName}
                 inputTypes={['ascii-capable']}
             />
+            <CustomModal
+                title="Rename Plan"
+                inputPlaceholder={["Plan Name"]}
+                icon={["calendar-today"]}
+                handleConfirm={handleRenamePlan}
+                isModalVisible={isRenameModelVisible}
+                setModalVisible={setRenameModelVisible}
+                data={newPlanName}
+                setData={setNewPlanName}
+                inputTypes={['ascii-capable']}
+            />
+            <CustomModal
+                title="New Plan"
+                inputPlaceholder={["Plan Name"]}
+                icon={["calendar-today"]}
+                handleConfirm={handleAddPlan}
+                isModalVisible={isAddPlanVisible}
+                setModalVisible={setAddPlanVisible}
+                data={newPlanName}
+                setData={setNewPlanName}
+                inputTypes={['ascii-capable']}
+            />
+
+            <Modal transparent visible={isMenuVisible} animationType="fade">
+                <Pressable style={styles.modalBackground} onPress={() => setMenuVisible(false)}>
+                    <View style={styles.menuContainer}>
+                        <TouchableOpacity style={styles.menuItem} onPress={() => setRenameModelVisible(true)}>
+                            <Text style={styles.menuText}>Rename</Text>
+                        </TouchableOpacity>
+                        <View style={styles.separator} />
+                        <TouchableOpacity style={styles.menuItem} onPress={() => setAddPlanVisible(true)}>
+                            <Text style={styles.menuText}>Add Workout Plan</Text>
+                        </TouchableOpacity>
+                        <View style={styles.separator} />
+                        <TouchableOpacity style={styles.menuItem} onPress={deleteCurrentPlan}>
+                            <Text style={styles.menuText}>Delete Current Plan</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Pressable>
+            </Modal>
 
             <View style={styles.routinesContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.routineScroll}>
@@ -340,6 +440,31 @@ const styles = StyleSheet.create({
     addedExerciseDetails: {
         color: 'white',
         fontSize: 14,
+    },
+    modalBackground: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    menuContainer: {
+        backgroundColor: 'black',
+        width: 200,
+        padding: 10,
+        borderRadius: 10,
+    },
+    menuItem: {
+        paddingVertical: 12,
+        alignItems: 'center',
+    },
+    menuText: {
+        color: 'white',
+        fontSize: 16,
+    },
+    separator: {
+        height: 1,
+        backgroundColor: 'white',
+        width: '100%',
     },
 });
 

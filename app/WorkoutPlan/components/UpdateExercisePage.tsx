@@ -21,7 +21,7 @@ export default function UpdateExercisePage() {
         setWorkoutPlans(prevPlans =>
             prevPlans.map(plan =>
                 plan.getName() === activePlan.getName() ?
-                    new Plan(plan.getName(), [...plan.getRoutines(), newRoutine]) :
+                    new Plan(plan.getName(), [newRoutine, ...plan.getRoutines().filter(routine => routine.getName() != newRoutine.getName())]) :
                     plan
             )
         );
@@ -29,10 +29,11 @@ export default function UpdateExercisePage() {
 
     // Utility function to update the routine list
     const updateRoutineList = (updatedRoutine: Routine) => {
+        setRoutines(prevRoutines => {
+            let array = prevRoutines.map(routine => (routine.getName() === activeRoutine?.getName() ? updatedRoutine : routine))
+            return array
+        });
         setActiveRoutine(updatedRoutine);
-        setRoutines(prevRoutines =>
-            prevRoutines.map(routine => (routine.getName() === activeRoutine?.getName() ? updatedRoutine : routine))
-        );
     };
 
     // Handles exercise update
@@ -66,10 +67,10 @@ export default function UpdateExercisePage() {
         const updatedRoutine = new Routine(activeRoutine.getName(), [
             ...activeRoutine.getExercises().filter(exercise => exercise.getName() !== updatedExercise.getName()),
             updatedExercise, // Move updated exercise to the end
+
         ]);
         updateRoutineList(updatedRoutine);
         updateWorkoutPlans(updatedRoutine)
-        setChosenExercise(updatedExercise);
         router.replace("/(tabs)/WorkoutPlan");
     };
 
