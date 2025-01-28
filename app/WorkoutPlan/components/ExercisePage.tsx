@@ -103,6 +103,7 @@ export default function ExercisePage() {
         setModalVisible={setModalVisible}
         data={workoutParameters}
         setData={setWorkoutParameters}
+        inputTypes={["numeric", "numeric", "numeric", "numeric"]}
       />
 
 

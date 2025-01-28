@@ -58,12 +58,17 @@ export default function UpdateExercisePage() {
     function handleComplete() {
         if (chosenExercise && activeRoutine) {
             let newExercise = chosenExercise.setCompleted(true)
-            let updatedActiveRoutineExercise = activeRoutine
-                .getExercises()
-                .map((exercise) =>
-                    newExercise.getName() === exercise.getName() ? newExercise : exercise
-                );
+            let updatedActiveRoutineExercise = [
+                ...activeRoutine
+                    .getExercises()
+                    .filter((exercise) => newExercise.getName() !== exercise.getName()), // Keep all exercises except the one with the same name
+                newExercise // Add the updated exercise to the end
+            ];
+            console.log(newExercise)
+            console.log(updatedActiveRoutineExercise)
             let newActiveRoutine = new Routine(activeRoutine.getName(), updatedActiveRoutineExercise)
+            setActiveRoutine(newActiveRoutine)
+
             setRoutines((prevRoutines) =>
                 prevRoutines.map((routine) =>
                     routine.getName() === activeRoutine.getName() ? newActiveRoutine : routine
@@ -164,10 +169,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#2A2424",
         padding: 16,
+
     },
     headerContainer: {
         alignItems: "center",
         marginBottom: 16,
+        marginTop: 25
     },
     title: {
         color: "white",

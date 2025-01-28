@@ -24,13 +24,13 @@ export default class ExerciseClass implements ExerciseType {
     private exerciseType: MuscleGroup;
     private url: string;
 
-    constructor(exerciseData: ExerciseDataType, workoutParameters: WorkoutParameters, exerciseType: MuscleGroup) {
+    constructor(exerciseData: ExerciseDataType, workoutParameters: WorkoutParameters, exerciseType: MuscleGroup, isCompleted?: boolean) {
         this.name = exerciseData.name;
         this.sets = workoutParameters?.sets as number;
         this.reps = workoutParameters?.reps as number;
         this.weight = workoutParameters?.weight as number;
         this.restTime = workoutParameters?.restTime as number;
-        this.isCompleted = false;
+        this.isCompleted = isCompleted ? isCompleted : false;
         this.exerciseType = exerciseType;
         this.url = exerciseData.url;
         this.timePerRep = exerciseData.timePerRep;
@@ -51,7 +51,8 @@ export default class ExerciseClass implements ExerciseType {
                 weight: overrides.weight ?? this.weight,
                 restTime: overrides.restTime ?? this.restTime,
             },
-            this.exerciseType
+            this.exerciseType,
+            overrides.isCompleted ?? this.isCompleted // Add isCompleted here
         );
     }
 

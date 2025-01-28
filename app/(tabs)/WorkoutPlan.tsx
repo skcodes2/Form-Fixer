@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { act, useState } from 'react';
 import {
     View,
     Text,
@@ -21,8 +21,6 @@ const WorkoutPlan = () => {
     const [isModalVisible, setModalVisible] = useState(false);
     const [newRoutineName, setNewRoutineName] = useState('');
     const router = useRouter();
-    console.log(activeRoutine)
-    console.log(routines)
     const dropdownData = [
         { label: 'Edit Routine', value: 'edit' },
         { label: 'Delete Routine', value: 'delete' },
@@ -51,6 +49,19 @@ const WorkoutPlan = () => {
         } else {
             setActiveRoutine(null); // Fallback if activeRoutine is undefined
         }
+    }
+
+    function handleReset() {
+        if (activeRoutine) {
+            let newActiveRoutine = activeRoutine?.resetCompleteness()
+            setActiveRoutine(newActiveRoutine)
+            setRoutines(prevRoutines => (
+                prevRoutines.map(routine => (
+                    newActiveRoutine.getName() === routine.getName() ? newActiveRoutine : routine
+                ))
+            ))
+        }
+
     }
 
     return (
@@ -88,6 +99,7 @@ const WorkoutPlan = () => {
                 setModalVisible={setModalVisible}
                 data={newRoutineName}
                 setData={setNewRoutineName}
+                inputTypes={['ascii-capable']}
             />
 
             <View style={styles.routinesContainer}>
@@ -137,9 +149,9 @@ const WorkoutPlan = () => {
                 <TouchableOpacity onPress={handleRemoveAll} style={styles.footerButton}>
                     <Text style={styles.footerButtonText}>Remove All</Text>
                 </TouchableOpacity>
-                <View style={styles.footerButton}>
+                <TouchableOpacity onPress={handleReset} style={styles.footerButton}>
                     <Text style={styles.footerButtonText}>Rest</Text>
-                </View>
+                </TouchableOpacity>
             </View>
 
 

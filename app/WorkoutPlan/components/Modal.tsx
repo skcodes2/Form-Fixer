@@ -9,6 +9,7 @@ import {
     TextInput,
     Modal,
     Pressable,
+    KeyboardTypeOptions,
 } from 'react-native';
 type MaterialIconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -23,6 +24,7 @@ type CustomModalProps = {
     setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
     data: any;
     setData: React.Dispatch<React.SetStateAction<any>>;
+    inputTypes: KeyboardTypeOptions[];
 };
 
 export default function CustomModal({
@@ -35,6 +37,7 @@ export default function CustomModal({
     setModalVisible,
     data,
     setData,
+    inputTypes
 }: CustomModalProps) {
     return (
         <Modal
@@ -64,7 +67,7 @@ export default function CustomModal({
                                 style={styles.input}
                                 placeholder={placeholder}
                                 placeholderTextColor="#ccc"
-                                keyboardType="numeric"
+                                keyboardType={inputTypes[index]}
                                 value={Array.isArray(data) ? data[index] : data}
                                 onChangeText={(text) => {
                                     if (inputPlaceholder.length === 1) {

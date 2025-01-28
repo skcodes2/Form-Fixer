@@ -26,7 +26,7 @@ export default class Routine implements RoutineType {
             totalTime += exercise.getTotalExerciseTime();
         });
 
-        return totalTime / 60;
+        return Math.round((totalTime / 60) * 100) / 100;
     }
 
     updateDuration(exercise: ExerciseType) {
