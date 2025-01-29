@@ -49,6 +49,14 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
+                name="WorkoutPlan"
+                options={{
+                    title: 'Plan',
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialIcons name="calendar-today" size={size} color={color} />
+                    ),
+                }} />
+            <Tabs.Screen
                 name="Settings"
                 options={{
                     title: 'Settings',

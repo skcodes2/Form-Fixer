@@ -9,6 +9,7 @@ export interface User {
     email: string;
     password: string;
     isLoggedIn: boolean;
+    hasPlan: boolean;
 }
 
 // Define the structure of the context value
@@ -26,8 +27,6 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null); // State for user
     const [token, setToken] = useState<string | null>(null); // State for token
-    console.log(user)
-    console.log(token)
 
     return (
         <UserContext.Provider value={{ user, setUser, token, setToken }}>

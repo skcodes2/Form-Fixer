@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "FormFixer",
-    "slug": "formfixer",
+    "slug": "FormFixer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -62,7 +62,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "877ba8e7-f356-4b9e-803a-6a26a395dff5"
+        "projectId": "7bacf425-1ed9-4efa-9ad7-a64326d5cdc8"
       }
     },
     "splash": {
