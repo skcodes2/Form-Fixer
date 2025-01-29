@@ -17,6 +17,13 @@ interface WorkoutPlanContextType {
     setWorkoutPlans: React.Dispatch<React.SetStateAction<Plan[]>>
     activePlan: Plan
     setActivePlan: React.Dispatch<React.SetStateAction<Plan>>
+    defaultPlan: Plan[]
+    fetched: boolean
+    setFetched: React.Dispatch<React.SetStateAction<boolean>>
+    workoutPlanFetched: boolean
+    setWorkoutPlanFetched: React.Dispatch<React.SetStateAction<boolean>>
+    temporyPlansFetched: boolean
+    setTemporyPlansFetched: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 // Create the context with a default value
@@ -31,9 +38,11 @@ export const WorkoutPlanProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const [chosenExercise, setChosenExercise] = useState<ExerciseClass | undefined>(undefined)
     const [workoutPlans, setWorkoutPlans] = useState(defaultPlan)
     const [activePlan, setActivePlan] = useState(defaultPlan[0])
-
+    const [fetched, setFetched] = useState(false);
+    const [workoutPlanFetched, setWorkoutPlanFetched] = useState(false);
+    const [temporyPlansFetched, setTemporyPlansFetched] = useState(false);
     return (
-        <WorkoutPlanContext.Provider value={{ activePlan, setActivePlan, activeRoutine, setActiveRoutine, setRoutines, routines, chosenExercise, setChosenExercise, setWorkoutPlans, workoutPlans }}>
+        <WorkoutPlanContext.Provider value={{ temporyPlansFetched, setTemporyPlansFetched, workoutPlanFetched, setWorkoutPlanFetched, fetched, setFetched, defaultPlan, activePlan, setActivePlan, activeRoutine, setActiveRoutine, setRoutines, routines, chosenExercise, setChosenExercise, setWorkoutPlans, workoutPlans }}>
             {children}
         </WorkoutPlanContext.Provider>
     );

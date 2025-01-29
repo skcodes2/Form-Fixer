@@ -6,6 +6,9 @@ import { useRouter } from "expo-router";
 import { WorkoutParameters } from "../types/PlanTypes";
 import Routine from "../Routine";
 import Plan from "../Plan";
+import { host } from "app/index";
+import AuthPut from "../../../Fetchers/Auth/AuthPut";
+import useUser from "app/hooks/UserContext";
 
 export default function UpdateExercisePage() {
     const { setChosenExercise, chosenExercise, setRoutines, setActiveRoutine, activeRoutine, setWorkoutPlans, activePlan } = useWorkoutPlan();
@@ -16,14 +19,19 @@ export default function UpdateExercisePage() {
         weight: chosenExercise?.getWeight() ?? null,
     });
     const router = useRouter();
+    const { token } = useUser();
 
     const updateWorkoutPlans = (newRoutine: Routine) => {
-        setWorkoutPlans(prevPlans =>
-            prevPlans.map(plan =>
+        setWorkoutPlans(prevPlans => {
+            let plans = prevPlans.map(plan =>
                 plan.getName() === activePlan.getName() ?
                     new Plan(plan.getName(), [newRoutine, ...plan.getRoutines().filter(routine => routine.getName() != newRoutine.getName())]) :
                     plan
             )
+            AuthPut(host + "/workouts/update-workout", { newPlan: plans }, () => { }, token)
+            return plans
+
+        }
         );
     };
 

@@ -11,15 +11,19 @@ import CustomModal from './Modal';
 import useWorkoutPlan from 'app/hooks/WorkoutPlanContext';
 import Routine from '../Routine';
 import Plan from '../Plan';
+import { host } from 'app/index';
+import AuthPut from '../../../Fetchers/Auth/AuthPut';
+import useUser from 'app/hooks/UserContext';
 
 export default function ExercisePage() {
   const [muscleGroupData, setMuscleGroupData] = useState<ExerciseDataType[]>(getMuscleGroupData('Chest'));
-  const { activeRoutine, setRoutines, setActiveRoutine, setWorkoutPlans, activePlan } = useWorkoutPlan()
+  const { setFetched, activeRoutine, setRoutines, setActiveRoutine, setWorkoutPlans, activePlan } = useWorkoutPlan()
   const [isModalVisible, setModalVisible] = useState(false);
   const [workoutParameters, setWorkoutParameters] = useState([{ reps: null, sets: null, weight: null, restTime: null }]);
   const router = useRouter();
   const [dropdownValue, setDropdownValue] = useState<MuscleGroup>("Chest");
   const [excerciseName, setExerciseName] = useState("")
+  const { token } = useUser()
   const dropdownData = [
     { label: 'Chest', value: 'Chest' },
     { label: 'Back', value: 'Back' },
@@ -30,6 +34,7 @@ export default function ExercisePage() {
 
   function onConfirm() {
     if (workoutParameters[0] && workoutParameters[1] && workoutParameters[2] && workoutParameters[3]) {
+
       setModalVisible(false);
       const parameters: WorkoutParameters = {
         reps: Number(workoutParameters[0]),
@@ -47,11 +52,13 @@ export default function ExercisePage() {
           let newRoutines = prevRoutines.map((routine) =>
             routine.getName() === activeRoutine.getName() ? updatedActiveRoutine : routine
           );
-          setWorkoutPlans(prevPlans => (
-            prevPlans.map(plan => (
+          setWorkoutPlans(prevPlans => {
+            let plans = prevPlans.map(plan => (
               plan.getName() === activePlan.getName() ? new Plan(activePlan.getName(), newRoutines) : plan
             ))
-          ))
+            AuthPut(host + "/workouts/update-workout", { newPlan: plans }, () => { }, token)
+            return plans
+          })
 
           return newRoutines
         });
@@ -67,8 +74,6 @@ export default function ExercisePage() {
   return (
     <View style={styles.container}>
 
-
-
       <View style={styles.header}>
         <Image
           source={require('../../../assets/images/workout/dumbell.png')} // Replace with your dumbbell icon path
@@ -76,7 +81,6 @@ export default function ExercisePage() {
         />
 
         <Text style={styles.headerText}>Add Exercise</Text>
-
 
       </View>
       <View style={styles.separator} />
@@ -114,7 +118,6 @@ export default function ExercisePage() {
         inputTypes={["numeric", "numeric", "numeric", "numeric"]}
       />
 
-
       {muscleGroupData.map((exerciseData, index) => {
         return (
           <Exercise key={index}
@@ -125,8 +128,6 @@ export default function ExercisePage() {
             }}
           />)
       })}
-
-
 
       <View style={styles.footer}>
         <TouchableOpacity onPress={() => router.replace("/(tabs)/WorkoutPlan")} style={styles.BackButton}>

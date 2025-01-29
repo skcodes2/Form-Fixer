@@ -7,6 +7,7 @@ import {
     TouchableOpacity,
     Modal,
     Pressable,
+    ActivityIndicator,
 } from 'react-native';
 import CustomModal from 'app/WorkoutPlan/components/Modal';
 import { useRouter } from 'expo-router';
@@ -17,10 +18,15 @@ import Routine from '../WorkoutPlan/Routine';
 import useWorkoutPlan from 'app/hooks/WorkoutPlanContext';
 import ChosenExercise from 'app/WorkoutPlan/components/ChosenExercise';
 import Plan from 'app/WorkoutPlan/Plan';
-
+import useUser from '../hooks/UserContext';
+import AuthPut from '../../Fetchers/Auth/AuthPut';
+import AuthGet from '../../Fetchers/Auth/AuthGet';
+import { host } from '../index';
+import Exercise from 'app/WorkoutPlan/Exercise';
+import { ExerciseDataType, WorkoutParameters } from 'app/WorkoutPlan/types/PlanTypes';
 
 const WorkoutPlan = () => {
-    const { activeRoutine, setActiveRoutine, routines, setRoutines, workoutPlans, setWorkoutPlans, setActivePlan, activePlan } = useWorkoutPlan()
+    const { temporyPlansFetched, setTemporyPlansFetched, workoutPlanFetched, setWorkoutPlanFetched, fetched, setFetched, defaultPlan, activeRoutine, setActiveRoutine, routines, setRoutines, workoutPlans, setWorkoutPlans, setActivePlan, activePlan } = useWorkoutPlan();
     const [dropdownValue, setDropdownValue] = useState("");
     const [isModalVisible, setModalVisible] = useState(false);
     const [newRoutineName, setNewRoutineName] = useState('');
@@ -29,7 +35,10 @@ const WorkoutPlan = () => {
     const [isAddPlanVisible, setAddPlanVisible] = useState(false);
     const [newPlanName, setNewPlanName] = useState('');
     const [isRenameModelVisible, setRenameModelVisible] = useState(false);
-    console.log(routines)
+    const { user, token, setUser } = useUser();
+    const [hasPlan, setHasPlan] = useState(user?.hasPlan);
+    const [temporyPlans, setTemporyPlans] = useState<{ name: string, routines: any[] }[] | null>(null);
+    const [loading, setLoading] = useState(true); // Add loading state
 
     const updateRoutineList = (updatedRoutine: Routine) => {
         setRoutines(prevRoutines =>
@@ -37,27 +46,30 @@ const WorkoutPlan = () => {
                 routine.getName() === activeRoutine?.getName() ? updatedRoutine : routine
             )
         );
-        updateWorkoutPlans(updatedRoutine);
     };
 
     const updateWorkoutPlans = (newRoutine: Routine) => {
-        setWorkoutPlans(prevPlans =>
-            prevPlans.map(plan =>
+        setWorkoutPlans(prevPlans => {
+            let plans = prevPlans.map(plan =>
                 plan.getName() === dropdownValue ?
                     new Plan(plan.getName(), [...plan.getRoutines().filter(routine => routine.getName() != newRoutine.getName()), newRoutine]) :
                     plan
             )
+            AuthPut(host + "/workouts/update-workout", { newPlan: plans }, () => { }, token)
+            return plans
+        }
         );
+
     };
 
-    // Usage example in `handleRemoveAll`
     const handleRemoveAll = () => {
         if (!activeRoutine) return;
         const updatedRoutine = activeRoutine.removeAllExercises();
         setActiveRoutine(updatedRoutine);
         updateRoutineList(updatedRoutine);
-        updateWorkoutPlans(updatedRoutine)
+        updateWorkoutPlans(updatedRoutine);
     };
+
     const handleAddRoutine = () => {
         if (!newRoutineName.trim()) {
             setModalVisible(true);
@@ -73,26 +85,28 @@ const WorkoutPlan = () => {
         setNewRoutineName('');
     };
 
-    // Usage example in `handleReset`
     const handleReset = () => {
         if (!activeRoutine) return;
         const updatedRoutine = activeRoutine.resetCompleteness();
         setActiveRoutine(updatedRoutine);
         updateRoutineList(updatedRoutine);
-        updateWorkoutPlans(updatedRoutine)
+        updateWorkoutPlans(updatedRoutine);
     };
+
     const deleteCurrentPlan = () => {
         if (workoutPlans.length === 1) {
             return alert('Cannot delete the last plan');
         }
         const updatedPlans = workoutPlans.filter(plan => plan.getName() !== dropdownValue);
+        AuthPut(host + "/workouts/update-workout", { newPlan: updatedPlans }, () => { }, token)
         setWorkoutPlans(updatedPlans);
         setDropdownValue(updatedPlans[0].getName());
         setRoutines(updatedPlans[0].getRoutines());
         setActivePlan(updatedPlans[0]);
         setActiveRoutine(updatedPlans[0].getRoutines()[0]);
         setMenuVisible(false);
-    }
+    };
+
     const handleAddPlan = () => {
         if (!newPlanName.trim()) {
             setAddPlanVisible(true);
@@ -102,6 +116,7 @@ const WorkoutPlan = () => {
 
         const newPlan = new Plan(newPlanName, [new Routine('Routine 1', null)]);
         const updatedPlans = [...workoutPlans, newPlan];
+        AuthPut(host + "/workouts/update-workout", { newPlan: updatedPlans }, () => { }, token)
 
         setWorkoutPlans(updatedPlans);
         setDropdownValue(newPlanName);
@@ -109,9 +124,9 @@ const WorkoutPlan = () => {
         setActiveRoutine(newPlan.getRoutines()[0]);
         setActivePlan(newPlan);
         setNewPlanName('');
-        setMenuVisible(false)
+        setMenuVisible(false);
         setNewPlanName('');
-    }
+    };
 
     const handleRenamePlan = () => {
         if (!newPlanName.trim()) {
@@ -125,6 +140,7 @@ const WorkoutPlan = () => {
         ));
 
         setWorkoutPlans(updatedPlans);
+        AuthPut(host + "/workouts/update-workout", { newPlan: updatedPlans }, () => { }, token)
         setDropdownValue(newPlanName);
         const newActivePlan = updatedPlans.find(plan => plan.getName() === newPlanName);
         if (newActivePlan) {
@@ -132,21 +148,77 @@ const WorkoutPlan = () => {
         }
         setRenameModelVisible(false);
         setNewPlanName('');
-    }
+    };
 
     useEffect(() => {
-        if (workoutPlans.length > 0) {
-            setDropdownValue(workoutPlans[0].getName()); // Set the first plan as default
-            setRoutines(workoutPlans[0].getRoutines()); // Set routines based on default plan
-
+        if (fetched) setLoading(false);
+        if (!fetched) {
+            if (!hasPlan) {
+                AuthPut(host + '/workouts/create-workout', { newPlan: defaultPlan }, () => { }, token);
+                AuthPut(host + '/users/update-plan', { hasPlan: true }, () => { }, token);
+                setDropdownValue(defaultPlan[0].getName());
+                setRoutines(defaultPlan[0].getRoutines());
+                setHasPlan(true);
+                if (user)
+                    setUser({ ...user, hasPlan: true });
+            }
+            if (token)
+                AuthGet(host + '/workouts/get-workout', setTemporyPlans, () => { }, token);
+            setFetched(true);
         }
     }, []);
 
+    useEffect(() => {
+        if (!temporyPlansFetched && temporyPlans) {
+            let plans: Plan[] = [];
+            temporyPlans.forEach(plan => {
+                let routinesT: Routine[] = [];
+                if (plan.routines[0].exercises[0]) {
+                    plan.routines.forEach(routine => {
+                        let exercises: Exercise[] = [];
+                        routine.exercises.forEach((exercise: any) => {
+                            let parameters: WorkoutParameters = { sets: exercise.sets, reps: exercise.reps, weight: exercise.weight, restTime: exercise.restTime };
+                            let exerciseData: ExerciseDataType = { name: exercise.name, url: exercise.url, timePerRep: exercise.timePerRep, description: exercise.description };
+                            exercises.push(new Exercise(exerciseData, parameters, exercise.exerciseType, exercise.isCompleted));
+                        });
+                        routinesT.push(new Routine(routine.name, exercises));
+                    });
+                } else {
+                    plan.routines.forEach(routine => {
+                        routinesT.push(new Routine(routine.name, null));
+                    });
+                }
+                plans.push(new Plan(plan.name, routinesT));
+            });
+            setWorkoutPlanFetched(true);
+            setTemporyPlansFetched(true);
+            setWorkoutPlans(plans);
+        }
+    }, [temporyPlans]);
+
+    useEffect(() => {
+        if (workoutPlans && workoutPlans.length > 0 && fetched && workoutPlanFetched) {
+            setDropdownValue(workoutPlans[0].getName());
+            setRoutines(workoutPlans[0].getRoutines());
+            setActiveRoutine(workoutPlans[0].getRoutines()[0]);
+            setActivePlan(workoutPlans[0]);
+            setWorkoutPlanFetched(false);
+            setLoading(false); // Set loading to false after data is fetched
+        }
+    }, [workoutPlans]);
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#F50707" />
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
-
             <View style={styles.header}>
-                <Dropdown
+                {workoutPlans[0] instanceof Plan && <Dropdown
                     style={styles.dropdown}
                     containerStyle={styles.dropdownContainer}
                     placeholderStyle={styles.dropdownPlaceholder}
@@ -162,15 +234,15 @@ const WorkoutPlan = () => {
                         const selectedPlan = workoutPlans.find(plan => plan.getName() === item.value);
                         if (selectedPlan) {
                             setDropdownValue(item.value); // Update dropdown selection
-                            setRoutines(selectedPlan.getRoutines())
-                            setActiveRoutine(selectedPlan.getRoutines()[0])
-                            setActivePlan(selectedPlan)
+                            setRoutines(selectedPlan.getRoutines());
+                            setActiveRoutine(selectedPlan.getRoutines()[0]);
+                            setActivePlan(selectedPlan);
                         }
                     }}
                     renderLeftIcon={() => (
                         <MaterialIcons name="access-time" size={24} color="white" style={styles.clockIcon} />
                     )}
-                />
+                />}
                 <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuButton}>
                     <Text style={styles.menuDots}>⋮</Text>
                 </TouchableOpacity>
@@ -230,7 +302,7 @@ const WorkoutPlan = () => {
 
             <View style={styles.routinesContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.routineScroll}>
-                    {routines.map((routine, index) => (
+                    {routines[0] instanceof Routine && routines.map((routine, index) => (
                         <RoutineButton
                             key={index}
                             name={routine.getName()}
@@ -238,8 +310,16 @@ const WorkoutPlan = () => {
                                 if (routines.length === 1) {
                                     return alert('Cannot delete the last routine');
                                 }
-                                setRoutines(routines.filter((ele) => ele !== routine));
+                                let newRoutines = routines.filter((ele) => ele !== routine)
+                                let newPlan = new Plan(activePlan.getName(), newRoutines)
+                                console.log(newPlan)
+                                let updatedPlans = workoutPlans.map(plan => plan.getName() === activePlan.getName() ? newPlan : plan)
+                                console.log(updatedPlans)
+                                AuthPut(host + "/workouts/update-workout", { newPlan: updatedPlans }, () => { }, token)
+                                setWorkoutPlans(updatedPlans)
+                                setRoutines(newRoutines);
                                 if (activeRoutine?.getName() === routine.getName()) setActiveRoutine(null);
+
                             }}
                             onPress={() => setActiveRoutine(routine)} // Set active routine
                             isActive={activeRoutine?.getName() === routine.getName()} // Pass active state
@@ -257,7 +337,7 @@ const WorkoutPlan = () => {
 
 
             <View style={styles.totalInfo}>
-                <Text style={styles.totalText}>Total of {activeRoutine?.getExercises().length} Exercises | {activeRoutine?.getTotalRoutineTime()} min</Text>
+                <Text style={styles.totalText}>Total of {workoutPlans[0].getRoutines()[0] instanceof Routine && activeRoutine?.getExercises().length} Exercises | {workoutPlans[0].getRoutines()[0] instanceof Routine && activeRoutine?.getTotalRoutineTime()} min</Text>
                 <TouchableOpacity onPress={() => { router.replace("../WorkoutPlan/components/ExercisePage") }} style={styles.addExerciseButton}>
                     <Text style={styles.addExerciseText}>+ Add Exercise</Text>
                 </TouchableOpacity>
@@ -265,7 +345,7 @@ const WorkoutPlan = () => {
 
 
             <ScrollView style={styles.exerciseList}>
-                {activeRoutine?.getExercises().map((exercise, index) => (
+                {workoutPlans[0].getRoutines()[0] instanceof Routine && activeRoutine?.getExercises().map((exercise, index) => (
                     <ChosenExercise key={index} exercise={exercise} />
                 ))}
             </ScrollView>
@@ -465,6 +545,12 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: 'white',
         width: '100%',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#2A2424',
     },
 });
 

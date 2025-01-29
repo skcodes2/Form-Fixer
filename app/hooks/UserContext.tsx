@@ -9,6 +9,7 @@ export interface User {
     email: string;
     password: string;
     isLoggedIn: boolean;
+    hasPlan: boolean;
 }
 
 // Define the structure of the context value
