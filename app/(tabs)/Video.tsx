@@ -18,7 +18,6 @@ import {
 } from 'react-native-vision-camera';
 import { PaintStyle, Skia } from '@shopify/react-native-skia';
 import getBestFormat from '../formFilter';
-import { runOnJS } from 'react-native-reanimated';
 
 
 function tensorToString(tensor: TensorflowModel['inputs'][number]): string {
@@ -56,13 +55,34 @@ function Video(): JSX.Element {
     paint.setColor(Skia.Color('white'));
 
     const lines = [
-        5, 7, 6, 8, 7, 9, 8, 10, 11, 13, 12, 14, 13, 15, 14, 16, 11, 12, 5, 6, 5, 11, 6, 12,
-    ];
+        // left shoulder -> elbow
+        5, 7,
+        // right shoulder -> elbow
+        6, 8,
+        // left elbow -> wrist
+        7, 9,
+        // right elbow -> wrist
+        8, 10,
+        // left hip -> knee
+        11, 13,
+        // right hip -> knee
+        12, 14,
+        // left knee -> ankle
+        13, 15,
+        // right knee -> ankle
+        14, 16,
+    
+        // left hip -> right hip
+        11, 12,
+        // left shoulder -> right shoulder
+        5, 6,
+        // left shoulder -> left hip
+        5, 11,
+        // right shoulder -> right hip
+        6, 12,
+      ];
 
     const SCALE = (format?.videoWidth ?? VIEW_WIDTH) / VIEW_WIDTH;
-
-    const angleRef = useRef<number | null>(null);
-    const feedbackRef = useRef<string>('');
 
     const frameProcessor = useSkiaFrameProcessor(
         (frame) => {
@@ -85,65 +105,30 @@ function Video(): JSX.Element {
                 const frameWidth = frame.width;
                 const frameHeight = frame.height;
 
-                const shoulderIndex = 5;
-                const elbowIndex = 6;
-                const wristIndex = 7;
+                // Extract keypoints
+                const x5 = Number(output[5 * 3 + 1]) * frameWidth;  // Left Shoulder (5)
+                const y5 = Number(output[5 * 3]) * frameHeight;
 
-                const shoulder = {
-                    x: Number(output[shoulderIndex * 3 + 1]) * frameWidth,
-                    y: Number(output[shoulderIndex * 3]) * frameHeight,
-                };
-                const elbow = {
-                    x: Number(output[elbowIndex * 3 + 1]) * frameWidth,
-                    y: Number(output[elbowIndex * 3]) * frameHeight,
-                };
-                const wrist = {
-                    x: Number(output[wristIndex * 3 + 1]) * frameWidth,
-                    y: Number(output[wristIndex * 3]) * frameHeight,
-                };
+                const x7 = Number(output[7 * 3 + 1]) * frameWidth;  // Left Elbow (7)
+                const y7 = Number(output[7 * 3]) * frameHeight;
 
-                // TESTING PURPOSES ONLY, CONSOLE LOGGING IS HERE
-                const confidenceShoulder = output[shoulderIndex * 3 + 2];
-                const confidenceElbow = output[elbowIndex * 3 + 2];
-                const confidenceWrist = output[wristIndex * 3 + 2];
+                const x9 = Number(output[9 * 3 + 1]) * frameWidth;  // Left Wrist (9)
+                const y9 = Number(output[9 * 3]) * frameHeight;
 
-                if (
-                    confidenceShoulder < minConfidence &&
-                    confidenceElbow < minConfidence &&
-                    confidenceWrist < minConfidence
-                ) {
-                    console.log('Keypoints have low confidence:', {
-                        confidenceShoulder,
-                        confidenceElbow,
-                        confidenceWrist,
-                    });
-                    return;
-                }
+                // Compute segment lengths
+                const d57 = Math.sqrt((x7 - x5) ** 2 + (y7 - y5) ** 2); // Shoulder to Elbow
+                const d79 = Math.sqrt((x9 - x7) ** 2 + (y9 - y7) ** 2); // Elbow to Wrist
+                const d59 = Math.sqrt((x9 - x5) ** 2 + (y9 - y5) ** 2); // Shoulder to Wrist
 
-                const vector1 = {
-                    x: elbow.x - shoulder.x,
-                    y: elbow.y - shoulder.y,
-                };
-                const vector2 = {
-                    x: wrist.x - elbow.x,
-                    y: wrist.y - elbow.y,
-                };
+                // Use the Law of Cosines to calculate the angle at the elbow (keypoint 7)
+                const cosTheta = (d57 ** 2 + d79 ** 2 - d59 ** 2) / (2 * d57 * d79);
+                const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosTheta))); // Clamp to avoid NaN
+                const angleDegrees = (angleRadians * 180) / Math.PI; // Convert to degrees
 
-                const dotProduct = vector1.x * vector2.x + vector1.y * vector2.y;
-                const magnitude1 = Math.sqrt(vector1.x ** 2 + vector1.y ** 2);
-                const magnitude2 = Math.sqrt(vector2.x ** 2 + vector2.y ** 2);
-
-                const calculatedAngle =
-                    Math.acos(dotProduct / (magnitude1 * magnitude2)) * (180 / Math.PI);
+                console.log(`Left Elbow Angle: ${angleDegrees.toFixed(2)}°`);
 
                 const minAngle = 30;
                 const maxAngle = 180;
-
-                angleRef.current = calculatedAngle;
-                feedbackRef.current =
-                    calculatedAngle >= minAngle && calculatedAngle <= maxAngle
-                        ? 'Correct Form'
-                        : 'Incorrect Form';
 
                 for (let i = 5; i < output.length / 3; i++) {
                     const confidence = Number(output[i * 3 + 2]);
@@ -290,7 +275,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     confidenceText: {
-        color: 'white',
+        color: 'Black',
         fontSize: 16,
         marginBottom: 10,
     },
@@ -305,7 +290,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     buttonText: {
-        color: 'white',
+        color: 'Black',
         fontSize: 16,
     },
     instructions: {
@@ -324,7 +309,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: '10%', // Position the overlay near the top of the screen
         alignSelf: 'center', // Center it horizontally
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black background
+        backgroundColor: 'rgba(255, 255, 255, 0.5)', // Semi-transparent black background
         padding: 10, // Add padding around the text
         borderRadius: 8, // Rounded corners for the overlay box
         zIndex: 10, // Ensure it stays above other components
