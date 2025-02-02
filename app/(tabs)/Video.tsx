@@ -54,6 +54,9 @@ function Video(): JSX.Element {
     paint.setStrokeWidth(LINE_WIDTH);
     paint.setColor(Skia.Color('white'));
 
+    const angleRef = useRef<number | null>(null);
+    const feedbackRef = useRef<string>('Correct Form');
+
     const lines = [
         // left shoulder -> elbow
         5, 7,
@@ -125,10 +128,21 @@ function Video(): JSX.Element {
                 const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosTheta))); // Clamp to avoid NaN
                 const angleDegrees = (angleRadians * 180) / Math.PI; // Convert to degrees
 
-                console.log(`Left Elbow Angle: ${angleDegrees.toFixed(2)}°`);
+                // Log the detected angle
+                // console.log(`Left Elbow Angle: ${angleDegrees.toFixed(2)}°`);
 
-                const minAngle = 30;
-                const maxAngle = 180;
+                // Store values in useRef (No direct state updates inside worklet)
+                angleRef.current = angleDegrees;
+
+                // ************************** Can only display results within the worklet thread as of now ***********************************
+                if (angleDegrees >= 27 && angleDegrees <= 33) {
+                    feedbackRef.current = '<30 degrees detected, too tensed, increase angle';
+                } else {
+                    feedbackRef.current = 'Correct Form';
+                }
+
+                console.log(`Calculated Angle: ${angleDegrees.toFixed(2)}°`);
+                console.log(`Feedback: ${feedbackRef.current}`);
 
                 for (let i = 5; i < output.length / 3; i++) {
                     const confidence = Number(output[i * 3 + 2]);
@@ -170,23 +184,20 @@ function Video(): JSX.Element {
         },
         [plugin, paint, inputWidth, inputHeight, minConfidence, lowerBodyConfidenceThreshold],
     );
-    
-    // Update state periodically from refs
+
+    // angleRef.current IS ALWAYS NULL, cannot be updated within the worklet thread!!!!
     // useEffect(() => {
     //     const interval = setInterval(() => {
     //         if (angleRef.current !== null) {
+    //             console.log(`Updated Angle: ${angleRef.current}`);
+    //             console.log(`Updated Feedback: ${feedbackRef.current}`);
     //             setAngle(angleRef.current);
     //             setFeedback(feedbackRef.current);
     //         }
-    //     }, 100);
-
-    //     return () => clearInterval(interval);
+    //     }, 100); // Update every 100ms
+    
+    //     return () => clearInterval(interval); // Cleanup on unmount
     // }, []);
-
-    useEffect(() => {
-        setFeedback('Correct Form'); // Hardcoded feedback
-        setAngle(45); // Hardcoded angle
-    }, []);
 
     // Permissions handling
     if (!hasPermission) return <PermissionsPage requestPermission={requestPermission} />;
@@ -202,14 +213,21 @@ function Video(): JSX.Element {
                 frameProcessor={frameProcessor}
                 format={format}
             />
+    
+            {/* Feedback Overlay */}
             <View style={styles.overlay}>
-                {angle !== null && (
-                    <Text style={styles.text}>
-                        {feedback}: {Math.round(angle)}°
-                    </Text>
-                )}
+                <Text
+                    style={[
+                        styles.feedbackText,
+                        feedback.includes('<30 degrees')
+                            ? styles.incorrectFeedback // Red for incorrect form
+                            : styles.correctFeedback,  // Green for correct form
+                    ]}
+                >
+                    {feedback}: {angle !== null ? `${Math.round(angle)}°` : 'Loading...'}
+                </Text>
             </View>
-
+    
             {/* Instruction Overlay */}
             <View style={styles.instructions}>
                 <Text style={styles.instructionText}>
@@ -217,7 +235,7 @@ function Video(): JSX.Element {
                 </Text>
             </View>
         </View>
-    );
+    );    
 }
 
 // Permissions page
@@ -293,26 +311,45 @@ const styles = StyleSheet.create({
         color: 'Black',
         fontSize: 16,
     },
-    instructions: {
-        position: 'absolute',
-        bottom: 100,
-        padding: 10,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 5,
-    },
-    instructionText: {
-        color: 'white',
-        fontSize: 16,
+    feedbackText: {
+        fontSize: 20,
+        fontWeight: 'bold',
         textAlign: 'center',
+        padding: 10,
     },
+    
+    correctFeedback: {
+        color: 'green', // Green text for correct form
+    },
+    
+    incorrectFeedback: {
+        color: 'red', // Red text for incorrect form
+    },
+    
     overlay: {
         position: 'absolute',
-        top: '10%', // Position the overlay near the top of the screen
-        alignSelf: 'center', // Center it horizontally
-        backgroundColor: 'rgba(255, 255, 255, 0.5)', // Semi-transparent black background
-        padding: 10, // Add padding around the text
-        borderRadius: 8, // Rounded corners for the overlay box
-        zIndex: 10, // Ensure it stays above other components
+        top: '30%', // 👈 Increase this value if text is not visible
+        left: '10%',
+        right: '10%',
+        alignSelf: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: 15,
+        borderRadius: 8,
+        zIndex: 10,
+    },
+    
+    instructions: {
+        position: 'absolute',
+        bottom: 80, // Move it slightly higher
+        padding: 12,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 8,
+    },
+    
+    instructionText: {
+        color: 'white',
+        fontSize: 18,
+        textAlign: 'center',
     },
 });
 
