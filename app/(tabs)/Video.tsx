@@ -18,6 +18,7 @@ import {
 } from 'react-native-vision-camera';
 import { PaintStyle, Skia } from '@shopify/react-native-skia';
 import getBestFormat from '../formFilter';
+import { useRunOnJS } from 'react-native-worklets-core';
 
 
 function tensorToString(tensor: TensorflowModel['inputs'][number]): string {
@@ -87,6 +88,14 @@ function Video(): JSX.Element {
 
     const SCALE = (format?.videoWidth ?? VIEW_WIDTH) / VIEW_WIDTH;
 
+    const updateAngle = useRunOnJS((angle) => {
+        setAngle(angle);
+    }, []);
+    
+    const updateFeedback = useRunOnJS((feedback) => {
+        setFeedback(feedback);
+    }, []);
+
     const frameProcessor = useSkiaFrameProcessor(
         (frame) => {
             'worklet';
@@ -128,21 +137,14 @@ function Video(): JSX.Element {
                 const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosTheta))); // Clamp to avoid NaN
                 const angleDegrees = (angleRadians * 180) / Math.PI; // Convert to degrees
 
-                // Log the detected angle
-                // console.log(`Left Elbow Angle: ${angleDegrees.toFixed(2)}°`);
+                // Use `useRunOnJS` to update state
+                updateAngle(angleDegrees);
 
-                // Store values in useRef (No direct state updates inside worklet)
-                angleRef.current = angleDegrees;
-
-                // ************************** Can only display results within the worklet thread as of now ***********************************
                 if (angleDegrees >= 27 && angleDegrees <= 33) {
-                    feedbackRef.current = '<30 degrees detected, too tensed, increase angle';
+                    updateFeedback('<30 degrees detected, too tensed, increase angle');
                 } else {
-                    feedbackRef.current = 'Correct Form';
+                    updateFeedback('Correct Form');
                 }
-
-                console.log(`Calculated Angle: ${angleDegrees.toFixed(2)}°`);
-                console.log(`Feedback: ${feedbackRef.current}`);
 
                 for (let i = 5; i < output.length / 3; i++) {
                     const confidence = Number(output[i * 3 + 2]);
@@ -184,20 +186,6 @@ function Video(): JSX.Element {
         },
         [plugin, paint, inputWidth, inputHeight, minConfidence, lowerBodyConfidenceThreshold],
     );
-
-    // angleRef.current IS ALWAYS NULL, cannot be updated within the worklet thread!!!!
-    // useEffect(() => {
-    //     const interval = setInterval(() => {
-    //         if (angleRef.current !== null) {
-    //             console.log(`Updated Angle: ${angleRef.current}`);
-    //             console.log(`Updated Feedback: ${feedbackRef.current}`);
-    //             setAngle(angleRef.current);
-    //             setFeedback(feedbackRef.current);
-    //         }
-    //     }, 100); // Update every 100ms
-    
-    //     return () => clearInterval(interval); // Cleanup on unmount
-    // }, []);
 
     // Permissions handling
     if (!hasPermission) return <PermissionsPage requestPermission={requestPermission} />;
