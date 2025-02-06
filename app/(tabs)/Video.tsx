@@ -140,7 +140,7 @@ function Video(): JSX.Element {
                 // Use `useRunOnJS` to update state
                 updateAngle(angleDegrees);
 
-                if (angleDegrees >= 27 && angleDegrees <= 33) {
+                if (angleDegrees >= 30 && angleDegrees <= 40) {
                     updateFeedback('<30 degrees detected, too tensed, increase angle');
                 } else {
                     updateFeedback('Correct Form');
