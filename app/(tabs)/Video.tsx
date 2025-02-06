@@ -146,42 +146,80 @@ function Video(): JSX.Element {
                     updateFeedback('Correct Form');
                 }
 
-                for (let i = 5; i < output.length / 3; i++) {
-                    const confidence = Number(output[i * 3 + 2]);
-                    const threshold =
-                        i >= 11 ? lowerBodyConfidenceThreshold : minConfidence;
+                // Extract keypoints for LEFT arm ONLY
+                // 6, 8, and 10 are the right arm (not required for only left bicep curl)
+                const keypoints = [5, 7, 9];
 
+                for (let i of keypoints) {
+                    const confidence = Number(output[i * 3 + 2]);
+                    const threshold = minConfidence;
+    
                     if (confidence > threshold) {
                         const x = Number(output[i * 3 + 1]) * frameWidth;
                         const y = Number(output[i * 3]) * frameHeight;
-
+    
                         frame.drawCircle(x, y, 2 * SCALE, paint);
                     }
                 }
-
-                for (let i = 0; i < lines.length; i += 2) {
-                    const from = lines[i];
-                    const to = lines[i + 1];
-
-                    if (from <= 4 || to <= 4) continue;
-
+    
+                // Define arm connections
+                const armLines = [
+                    [5, 7], // Left Shoulder to Left Elbow
+                    [7, 9], // Left Elbow to Left Wrist
+                    // [6, 8], // Right Shoulder to Right Elbow
+                    // [8, 10], // Right Elbow to Right Wrist
+                ];
+    
+                for (let [from, to] of armLines) {
                     const confidenceFrom = Number(output[from * 3 + 2]);
                     const confidenceTo = Number(output[to * 3 + 2]);
-
-                    const threshold =
-                        from >= 11 || to >= 11
-                            ? lowerBodyConfidenceThreshold
-                            : minConfidence;
-
-                    if (confidenceFrom > threshold && confidenceTo > threshold) {
+    
+                    if (confidenceFrom > minConfidence && confidenceTo > minConfidence) {
                         const x1 = Number(output[from * 3 + 1]) * frameWidth;
                         const y1 = Number(output[from * 3]) * frameHeight;
                         const x2 = Number(output[to * 3 + 1]) * frameWidth;
                         const y2 = Number(output[to * 3]) * frameHeight;
-
+    
                         frame.drawLine(x1, y1, x2, y2, paint);
                     }
                 }
+                // ****** BELOW IS FOR DRAWING WHOLE BODY LINES ******
+                // for (let i = 5; i < output.length / 3; i++) {
+                //     const confidence = Number(output[i * 3 + 2]);
+                //     const threshold =
+                //         i >= 11 ? lowerBodyConfidenceThreshold : minConfidence;
+
+                //     if (confidence > threshold) {
+                //         const x = Number(output[i * 3 + 1]) * frameWidth;
+                //         const y = Number(output[i * 3]) * frameHeight;
+
+                //         frame.drawCircle(x, y, 2 * SCALE, paint);
+                //     }
+                // }
+
+                // for (let i = 0; i < lines.length; i += 2) {
+                //     const from = lines[i];
+                //     const to = lines[i + 1];
+
+                //     if (from <= 4 || to <= 4) continue;
+
+                //     const confidenceFrom = Number(output[from * 3 + 2]);
+                //     const confidenceTo = Number(output[to * 3 + 2]);
+
+                //     const threshold =
+                //         from >= 11 || to >= 11
+                //             ? lowerBodyConfidenceThreshold
+                //             : minConfidence;
+
+                //     if (confidenceFrom > threshold && confidenceTo > threshold) {
+                //         const x1 = Number(output[from * 3 + 1]) * frameWidth;
+                //         const y1 = Number(output[from * 3]) * frameHeight;
+                //         const x2 = Number(output[to * 3 + 1]) * frameWidth;
+                //         const y2 = Number(output[to * 3]) * frameHeight;
+
+                //         frame.drawLine(x1, y1, x2, y2, paint);
+                //     }
+                // }
             }
         },
         [plugin, paint, inputWidth, inputHeight, minConfidence, lowerBodyConfidenceThreshold],
