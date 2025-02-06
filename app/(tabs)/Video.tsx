@@ -118,22 +118,22 @@ function Video(): JSX.Element {
                 const frameHeight = frame.height;
 
                 // Extract keypoints
-                const x5 = Number(output[5 * 3 + 1]) * frameWidth;  // Left Shoulder (5)
-                const y5 = Number(output[5 * 3]) * frameHeight;
+                const xLeftShoulder = Number(output[5 * 3 + 1]) * frameWidth;  // Left Shoulder (5)
+                const yLeftShoulder = Number(output[5 * 3]) * frameHeight;
 
-                const x7 = Number(output[7 * 3 + 1]) * frameWidth;  // Left Elbow (7)
-                const y7 = Number(output[7 * 3]) * frameHeight;
+                const xElbow = Number(output[7 * 3 + 1]) * frameWidth;  // Left Elbow (7)
+                const yElbow = Number(output[7 * 3]) * frameHeight;
 
-                const x9 = Number(output[9 * 3 + 1]) * frameWidth;  // Left Wrist (9)
-                const y9 = Number(output[9 * 3]) * frameHeight;
+                const xWrist = Number(output[9 * 3 + 1]) * frameWidth;  // Left Wrist (9)
+                const yWrist = Number(output[9 * 3]) * frameHeight;
 
                 // Compute segment lengths
-                const d57 = Math.sqrt((x7 - x5) ** 2 + (y7 - y5) ** 2); // Shoulder to Elbow
-                const d79 = Math.sqrt((x9 - x7) ** 2 + (y9 - y7) ** 2); // Elbow to Wrist
-                const d59 = Math.sqrt((x9 - x5) ** 2 + (y9 - y5) ** 2); // Shoulder to Wrist
+                const humerusLength = Math.sqrt((xElbow - xLeftShoulder) ** 2 + (yElbow - yLeftShoulder) ** 2); // Shoulder to Elbow
+                const forearmLength = Math.sqrt((xWrist - xElbow) ** 2 + (yWrist - yElbow) ** 2); // Elbow to Wrist
+                const shouderToWristLength = Math.sqrt((xWrist - xLeftShoulder) ** 2 + (yWrist - yLeftShoulder) ** 2); // Shoulder to Wrist
 
                 // Use the Law of Cosines to calculate the angle at the elbow (keypoint 7)
-                const cosTheta = (d57 ** 2 + d79 ** 2 - d59 ** 2) / (2 * d57 * d79);
+                const cosTheta = (humerusLength ** 2 + forearmLength ** 2 - shouderToWristLength ** 2) / (2 * humerusLength * forearmLength);
                 const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosTheta))); // Clamp to avoid NaN
                 const angleDegrees = (angleRadians * 180) / Math.PI; // Convert to degrees
 
@@ -148,7 +148,7 @@ function Video(): JSX.Element {
 
                 // Extract keypoints for LEFT arm ONLY
                 // 6, 8, and 10 are the right arm (not required for only left bicep curl)
-                const keypoints = [5, 7, 9];
+                const keypoints = [5, 7, 9]; // again here 5 = shoulder, 7 = elbow, and 9 = wrist
 
                 for (let i of keypoints) {
                     const confidence = Number(output[i * 3 + 2]);
