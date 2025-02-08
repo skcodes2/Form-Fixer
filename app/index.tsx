@@ -8,18 +8,26 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import useUser from './hooks/UserContext';
 import { FontAwesome } from '@expo/vector-icons';
 import useGlobalStyle from './hooks/GlobalStyleContext';
 import * as Haptics from 'expo-haptics';
+import * as WebBrowser from "expo-web-browser"
+import * as Google from "expo-auth-session/providers/google"
+
+const webClientId = "435855242606-un1l42dlfba7gdu03gdduttc8dh13nls.apps.googleusercontent.com"
+const iosClientId = "435855242606-1oi688dv54l5rd711nfd0ev5upijcnvp.apps.googleusercontent.com"
+const androidClientId = "435855242606-s3l91u6n559pserllmuao0kks3ru2bgq.apps.googleusercontent.com"
+
+WebBrowser.maybeCompleteAuthSession();
 
 import AuthPost from '../Fetchers/Auth/AuthDelete';
 import Post from '../Fetchers/NoAuth/Post';
 import Put from '../Fetchers/NoAuth/Put';
 
-export let host = "http://10.0.0.242:3000"
+export let host = "http://172.30.141.238:3000"
 
 
 // Sanitizer function for managing input
@@ -30,6 +38,60 @@ export function Sanitizer(value: string, setFunc: Dispatch<SetStateAction<string
 }
 
 export default function Index() {
+  const config = {
+    webClientId,
+    iosClientId,
+    androidClientId
+  };
+
+  const [request, response, promptAsync] = Google.useAuthRequest(config);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleToken = () => {
+    if (response?.type === "success") {
+      const { id_token } = response.params;
+      console.log("ID Token:", id_token);
+
+      setIsLoading(true); // Start loading
+      fetch(`${host}/google-login`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${id_token}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("Failed to login");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          if (data.user) {
+            console.log("Login successful:", data.user);
+            setUser(data.user); // Set user in context
+            setToken(id_token); // Set token in context
+            Alert.alert("Success", "Google login successful");
+            router.replace("/(tabs)/Home");
+          } else {
+            Alert.alert("Error", data.message || "Google login failed");
+          }
+        })
+        .catch((err) => {
+          console.error("Login error:", err);
+          Alert.alert("Error", "Something went wrong. Please try again.");
+        })
+        .finally(() => setIsLoading(false)); // Stop loading
+    }
+  };
+
+  useEffect(() => {
+    if (response) {
+      handleToken();
+    }
+  }, [response]);
+
+  ///////////////////////////////////////////////////////////////////////////
   const router = useRouter();
   const globalStyle = useGlobalStyle();
   const { setUser, setToken } = useUser()
@@ -166,33 +228,6 @@ export default function Index() {
           <Text style={[styles.forgotPassword, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.xs }]}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        {/* <View style={styles.container}>
-          <Text style={styles.title}>Reset Password</Text>
-
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-
-          <TextInput
-            placeholder="Enter new password"
-            placeholderTextColor="gray"
-            secureTextEntry
-            value={newPassword}
-            onChangeText={setNewPassword}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Confirm new password"
-            placeholderTextColor="gray"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            style={styles.input}
-          />
-
-          <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
-            <Text style={styles.buttonText}>Reset Password</Text>
-          </TouchableOpacity>
-        </View> */}
-
         <Modal
           visible={isModalVisible}
           animationType="slide"
@@ -276,13 +311,17 @@ export default function Index() {
 
         <TouchableOpacity
           style={styles.googleButton}
+          disabled={isLoading}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
+            promptAsync(); // Start Google login flow
           }}
         >
-          <Text style={[styles.googleButtonText, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.m }]}>Google Login</Text>
+          <Text style={[styles.googleButtonText, { fontFamily: globalStyle.fontStyle.textFont, fontSize: globalStyle.fontSize.m }]}>
+            {isLoading ? "Loading..." : "Google Login"}
+          </Text>
         </TouchableOpacity>
+
       </View>
 
 
