@@ -1,5 +1,5 @@
-import { MuscleGroup } from "./types/PlanTypes";
-import { ExerciseDataType } from "./types/PlanTypes";
+import { MuscleGroup } from "../../types/PlanTypes";
+import { ExerciseDataType } from "../../types/PlanTypes";
 
 
 

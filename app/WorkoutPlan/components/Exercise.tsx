@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import React from 'react';
-import { ExerciseDataType } from '../types/PlanTypes';
+import { ExerciseDataType } from '../../../types/PlanTypes';
 import { ImageMap } from '../ExcerciseData';
 
 type ExerciseProps = {

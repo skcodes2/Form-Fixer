@@ -16,9 +16,9 @@ import useGlobalStyle from './hooks/GlobalStyleContext';
 import * as Haptics from 'expo-haptics';
 import * as WebBrowser from "expo-web-browser"
 import * as Google from "expo-auth-session/providers/google"
+import { makeRedirectUri } from "expo-auth-session";
 
-const webClientId = "435855242606-un1l42dlfba7gdu03gdduttc8dh13nls.apps.googleusercontent.com"
-const iosClientId = "435855242606-1oi688dv54l5rd711nfd0ev5upijcnvp.apps.googleusercontent.com"
+const webClientId = "435855242606-k8gr54v7vjc5kber8g8qd0189800q48j.apps.googleusercontent.com"
 const androidClientId = "435855242606-s3l91u6n559pserllmuao0kks3ru2bgq.apps.googleusercontent.com"
 
 WebBrowser.maybeCompleteAuthSession();
@@ -27,8 +27,11 @@ import AuthPost from '../Fetchers/Auth/AuthDelete';
 import Post from '../Fetchers/NoAuth/Post';
 import Put from '../Fetchers/NoAuth/Put';
 
-export let host = "http://172.30.141.238:3000"
+export let host = "http://10.0.0.222:3000"
 
+const redirectUri = makeRedirectUri({
+  scheme: "com.formfix.app", // Ensure this matches your Android package name
+});
 
 // Sanitizer function for managing input
 export function Sanitizer(value: string, setFunc: Dispatch<SetStateAction<string>>, regex: any) {
@@ -38,13 +41,13 @@ export function Sanitizer(value: string, setFunc: Dispatch<SetStateAction<string
 }
 
 export default function Index() {
-  const config = {
-    webClientId,
-    iosClientId,
-    androidClientId
-  };
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId,
+    scopes: ["openid", "profile", "email"], // Ensure "openid" is included
+    responseType: "id_token", // Correct response type
+    redirectUri, // Ensure this is properly set
+  });
 
-  const [request, response, promptAsync] = Google.useAuthRequest(config);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleToken = () => {

@@ -1,5 +1,5 @@
-import { RoutineType } from "../WorkoutPlan/types/PlanTypes";
-import { WorkoutPlanType } from "../WorkoutPlan/types/PlanTypes";
+import { RoutineType } from "../../types/PlanTypes";
+import { WorkoutPlanType } from "../../types/PlanTypes";
 import Routine from "./Routine";
 
 export default class Plan implements WorkoutPlanType {
