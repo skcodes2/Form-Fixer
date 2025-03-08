@@ -1,5 +1,5 @@
-import ExerciseClass from "../Exercise"
-import Routine from "../Routine"
+import ExerciseClass from "../app/WorkoutPlan/Exercise"
+import Routine from "../app/WorkoutPlan/Routine"
 
 export interface RoutineType {
     addExercise: (exercise: ExerciseClass) => Routine

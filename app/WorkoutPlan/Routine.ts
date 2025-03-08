@@ -1,6 +1,6 @@
 import ExerciseClass from "./Exercise";
-import { RoutineType } from "./types/PlanTypes";
-import { ExerciseType } from "./types/PlanTypes";
+import { RoutineType } from "../../types/PlanTypes";
+import { ExerciseType } from "../../types/PlanTypes";
 
 export default class Routine implements RoutineType {
 

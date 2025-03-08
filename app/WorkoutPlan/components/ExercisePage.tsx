@@ -1,7 +1,7 @@
 import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
 import { getMuscleGroupData, getExerciseByName } from '../ExcerciseData';
-import { ExerciseDataType, MuscleGroup, RoutineType, WorkoutParameters } from '../types/PlanTypes';
+import { ExerciseDataType, MuscleGroup, RoutineType, WorkoutParameters } from '../../../types/PlanTypes';
 import Exercise from './Exercise';
 import ExerciseClass from '../Exercise';
 import { Dropdown } from 'react-native-element-dropdown';

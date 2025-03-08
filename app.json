@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "FormFixer",
-    "slug": "FormFixer",
+    "slug": "formfixer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -23,7 +23,19 @@
       "permissions": [
         "android.permission.CAMERA"
       ],
-      "package": "com.formfix.app"
+      "package": "com.formfix.app", 
+      "intentFilters": [ 
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "myapp",
+              "host": "auth"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -62,7 +74,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "7bacf425-1ed9-4efa-9ad7-a64326d5cdc8"
+        "projectId": "34e1f3a1-dcc4-4288-a729-11f7b98403e8"
       }
     },
     "splash": {

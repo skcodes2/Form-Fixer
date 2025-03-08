@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image } from "reac
 import useWorkoutPlan from "../../hooks/WorkoutPlanContext";
 import { ImageMap } from "../ExcerciseData";
 import { useRouter } from "expo-router";
-import { WorkoutParameters } from "../types/PlanTypes";
+import { WorkoutParameters } from "../../../types/PlanTypes";
 import Routine from "../Routine";
 import Plan from "../Plan";
 import { host } from "app/index";
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     },
     exerciseImage: {
         width: "100%",
-        height: 200,
+        height: 325,
         borderRadius: 8,
         marginBottom: 16,
     },

@@ -7,6 +7,7 @@ import {
     View,
     Platform,
     TouchableOpacity,
+    Modal,
 } from 'react-native';
 import { TensorflowModel, useTensorflowModel } from 'react-native-fast-tflite';
 import { useResizePlugin } from 'vision-camera-resize-plugin';
@@ -18,12 +19,14 @@ import {
 } from 'react-native-vision-camera';
 import { PaintStyle, Skia } from '@shopify/react-native-skia';
 import getBestFormat from '../formFilter';
-import { runOnJS } from 'react-native-reanimated';
+import { useRunOnJS } from 'react-native-worklets-core';
 
 
 function tensorToString(tensor: TensorflowModel['inputs'][number]): string {
     return `${tensor.dataType} [${tensor.shape}]`;
 }
+
+
 
 const VIEW_WIDTH = Dimensions.get('screen').width;
 const LINE_WIDTH = 2;
@@ -32,15 +35,22 @@ function Video(): JSX.Element {
     const [minConfidence, setMinConfidence] = useState(0.25); // Minimum confidence threshold for upper body
     const [lowerBodyConfidenceThreshold, setLowerBodyConfidenceThreshold] = useState(0.35); // For lower body keypoints
     const [feedback, setFeedback] = useState(''); // Feedback for form (Correct/Incorrect)
+    const [rFeedback, setRFeedback] = useState(''); // Feedback for right arm
     const [angle, setAngle] = useState<number | null>(null); // Calculated angle
-
+    const [rightArmAngle, setRightArmAngle] = useState<number | null>(null); // Calculated angle for right
+    const [exerciseName, setExerciseName] = useState("")
     const device = useCameraDevice('back');
     const { hasPermission, requestPermission } = useCameraPermission();
     const { resize } = useResizePlugin();
+    const [isModalVisible, setIsModalVisible] = useState(true);
 
     const delegate = Platform.OS === 'ios' ? 'core-ml' : undefined;
     const plugin = useTensorflowModel(require('./poseModel.tflite'), delegate);
 
+    const handleSelectExercise = (name: string) => {
+        setExerciseName(name);
+        setIsModalVisible(false);
+    };
     const format = useMemo(
         () => (device != null ? getBestFormat(device, 720, 1000) : undefined),
         [device],
@@ -55,21 +65,61 @@ function Video(): JSX.Element {
     paint.setStrokeWidth(LINE_WIDTH);
     paint.setColor(Skia.Color('white'));
 
+    const angleRef = useRef<number | null>(null);
+    const feedbackRef = useRef<string>('Correct Form');
+
     const lines = [
-        5, 7, 6, 8, 7, 9, 8, 10, 11, 13, 12, 14, 13, 15, 14, 16, 11, 12, 5, 6, 5, 11, 6, 12,
+        // left shoulder -> elbow
+        5, 7,
+        // right shoulder -> elbow
+        6, 8,
+        // left elbow -> wrist
+        7, 9,
+        // right elbow -> wrist
+        8, 10,
+        // left hip -> knee
+        11, 13,
+        // right hip -> knee
+        12, 14,
+        // left knee -> ankle
+        13, 15,
+        // right knee -> ankle
+        14, 16,
+
+        // left hip -> right hip
+        11, 12,
+        // left shoulder -> right shoulder
+        5, 6,
+        // left shoulder -> left hip
+        5, 11,
+        // right shoulder -> right hip
+        6, 12,
     ];
 
     const SCALE = (format?.videoWidth ?? VIEW_WIDTH) / VIEW_WIDTH;
 
-    const angleRef = useRef<number | null>(null);
-    const feedbackRef = useRef<string>('');
+    const updateAngle = useRunOnJS((angle) => {
+        setAngle(angle);
+    }, []);
+
+    const updateAngleRight = useRunOnJS((angle) => {
+        setRightArmAngle(angle);
+    }, []);
+
+    const updateRightFeedback = useRunOnJS((feedback) => {
+        setRFeedback(feedback);
+    }, []);
+
+    const updateFeedback = useRunOnJS((feedback) => {
+        setFeedback(feedback);
+    }, []);
 
     const frameProcessor = useSkiaFrameProcessor(
         (frame) => {
             'worklet';
-
-            frame.render()
-
+            if (exerciseName !== "") {
+                frame.render()
+            }
             if (plugin.model != null) {
                 const smaller = resize(frame, {
                     scale: {
@@ -85,70 +135,85 @@ function Video(): JSX.Element {
                 const frameWidth = frame.width;
                 const frameHeight = frame.height;
 
-                const shoulderIndex = 5;
-                const elbowIndex = 6;
-                const wristIndex = 7;
+                // Extract keypoints for LEFT arm ONLY
+                const xLeftShoulder = Number(output[5 * 3 + 1]) * frameWidth;  // Left Shoulder (5)
+                const yLeftShoulder = Number(output[5 * 3]) * frameHeight;
 
-                const shoulder = {
-                    x: Number(output[shoulderIndex * 3 + 1]) * frameWidth,
-                    y: Number(output[shoulderIndex * 3]) * frameHeight,
-                };
-                const elbow = {
-                    x: Number(output[elbowIndex * 3 + 1]) * frameWidth,
-                    y: Number(output[elbowIndex * 3]) * frameHeight,
-                };
-                const wrist = {
-                    x: Number(output[wristIndex * 3 + 1]) * frameWidth,
-                    y: Number(output[wristIndex * 3]) * frameHeight,
-                };
+                const xElbow = Number(output[7 * 3 + 1]) * frameWidth;  // Left Elbow (7)
+                const yElbow = Number(output[7 * 3]) * frameHeight;
 
-                // TESTING PURPOSES ONLY, CONSOLE LOGGING IS HERE
-                const confidenceShoulder = output[shoulderIndex * 3 + 2];
-                const confidenceElbow = output[elbowIndex * 3 + 2];
-                const confidenceWrist = output[wristIndex * 3 + 2];
+                const xWrist = Number(output[9 * 3 + 1]) * frameWidth;  // Left Wrist (9)
+                const yWrist = Number(output[9 * 3]) * frameHeight;
 
-                if (
-                    confidenceShoulder < minConfidence &&
-                    confidenceElbow < minConfidence &&
-                    confidenceWrist < minConfidence
-                ) {
-                    console.log('Keypoints have low confidence:', {
-                        confidenceShoulder,
-                        confidenceElbow,
-                        confidenceWrist,
-                    });
-                    return;
+                // Right arm keypoints
+                if (exerciseName === "Shoulder Press") {
+                    const xRightShoulder = Number(output[6 * 3 + 1]) * frameWidth;  // Right Shoulder (6)
+                    const yRightShoulder = Number(output[6 * 3]) * frameHeight;
+
+                    const xRElbow = Number(output[8 * 3 + 1]) * frameWidth;  // Right Elbow (8)
+                    const yRElbow = Number(output[8 * 3]) * frameHeight;
+
+                    const xRWrist = Number(output[10 * 3 + 1]) * frameWidth;  // Right Wrist (10)
+                    const yRWrist = Number(output[10 * 3]) * frameHeight;
+
+                    // Compute segment lengths for right arm
+                    const rhumerusLength = Math.sqrt((xRElbow - xRightShoulder) ** 2 + (yRElbow - yRightShoulder) ** 2); // Shoulder to Elbow
+                    const rforearmLength = Math.sqrt((xRWrist - xRElbow) ** 2 + (yRWrist - yRElbow) ** 2); // Elbow to Wrist
+                    const rshouderToWristLength = Math.sqrt((xRWrist - xRightShoulder) ** 2 + (yRWrist - yRightShoulder) ** 2); // Shoulder to Wrist
+
+                    // Use the Law of Cosines to calculate the angle at the elbow (keypoint 8)
+                    const rcosTheta = (rhumerusLength ** 2 + rforearmLength ** 2 - rshouderToWristLength ** 2) / (2 * rhumerusLength * rforearmLength);
+                    const rangleRadians = Math.acos(Math.max(-1, Math.min(1, rcosTheta))); // Clamp to avoid NaN
+                    const rangleDegrees = (rangleRadians * 180) / Math.PI; // Convert to degrees
+
+                    // Use `useRunOnJS` to update state
+                    updateAngleRight(rangleDegrees);
+
+                    if (rangleDegrees < 75) {
+                        updateRightFeedback('<75 degrees detected on Right Arm, increase angle');
+                    } else
+                        updateRightFeedback('Right Arm: ');
+
+                }
+                // Compute segment lengths for left arm
+                const humerusLength = Math.sqrt((xElbow - xLeftShoulder) ** 2 + (yElbow - yLeftShoulder) ** 2); // Shoulder to Elbow
+                const forearmLength = Math.sqrt((xWrist - xElbow) ** 2 + (yWrist - yElbow) ** 2); // Elbow to Wrist
+                const shouderToWristLength = Math.sqrt((xWrist - xLeftShoulder) ** 2 + (yWrist - yLeftShoulder) ** 2); // Shoulder to Wrist
+
+                // Use the Law of Cosines to calculate the angle at the elbow (keypoint 7)
+                const cosTheta = (humerusLength ** 2 + forearmLength ** 2 - shouderToWristLength ** 2) / (2 * humerusLength * forearmLength);
+                const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosTheta))); // Clamp to avoid NaN
+                const angleDegrees = (angleRadians * 180) / Math.PI; // Convert to degrees
+
+                // Use `useRunOnJS` to update state
+                updateAngle(angleDegrees);
+
+                if (exerciseName === "Curl") {
+
+                    if (angleDegrees >= 30 && angleDegrees <= 40) {
+                        updateFeedback('<30 degrees detected, too tensed, increase angle');
+                    } else {
+                        updateFeedback('Correct Form');
+                    }
                 }
 
-                const vector1 = {
-                    x: elbow.x - shoulder.x,
-                    y: elbow.y - shoulder.y,
-                };
-                const vector2 = {
-                    x: wrist.x - elbow.x,
-                    y: wrist.y - elbow.y,
-                };
+                if (exerciseName === "Shoulder Press") {
+                    if (angleDegrees < 75) {
+                        updateFeedback('<75 degrees detected on Left Arm, increase angle');
+                    } else
+                        updateFeedback('Left Arm: ');
+                }
 
-                const dotProduct = vector1.x * vector2.x + vector1.y * vector2.y;
-                const magnitude1 = Math.sqrt(vector1.x ** 2 + vector1.y ** 2);
-                const magnitude2 = Math.sqrt(vector2.x ** 2 + vector2.y ** 2);
+                // Extract keypoints for LEFT arm ONLY
+                // 6, 8, and 10 are the right arm (not required for only left bicep curl)
+                const keypoints = [5, 7, 9]; // again here 5 = shoulder, 7 = elbow, and 9 = wrist
+                if (exerciseName === "Shoulder Press") {
+                    keypoints.push(6, 8, 10);
+                }
 
-                const calculatedAngle =
-                    Math.acos(dotProduct / (magnitude1 * magnitude2)) * (180 / Math.PI);
-
-                const minAngle = 30;
-                const maxAngle = 180;
-
-                angleRef.current = calculatedAngle;
-                feedbackRef.current =
-                    calculatedAngle >= minAngle && calculatedAngle <= maxAngle
-                        ? 'Correct Form'
-                        : 'Incorrect Form';
-
-                for (let i = 5; i < output.length / 3; i++) {
+                for (let i of keypoints) {
                     const confidence = Number(output[i * 3 + 2]);
-                    const threshold =
-                        i >= 11 ? lowerBodyConfidenceThreshold : minConfidence;
+                    const threshold = minConfidence;
 
                     if (confidence > threshold) {
                         const x = Number(output[i * 3 + 1]) * frameWidth;
@@ -158,21 +223,22 @@ function Video(): JSX.Element {
                     }
                 }
 
-                for (let i = 0; i < lines.length; i += 2) {
-                    const from = lines[i];
-                    const to = lines[i + 1];
+                // Define arm connections
+                const armLines = [
+                    [5, 7], // Left Shoulder to Left Elbow
+                    [7, 9], // Left Elbow to Left Wrist
+                    // [6, 8], // Right Shoulder to Right Elbow
+                    // [8, 10], // Right Elbow to Right Wrist
+                ];
+                if (exerciseName === "Shoulder Press") {
+                    armLines.push([6, 8], [8, 10]);
+                }
 
-                    if (from <= 4 || to <= 4) continue;
-
+                for (let [from, to] of armLines) {
                     const confidenceFrom = Number(output[from * 3 + 2]);
                     const confidenceTo = Number(output[to * 3 + 2]);
 
-                    const threshold =
-                        from >= 11 || to >= 11
-                            ? lowerBodyConfidenceThreshold
-                            : minConfidence;
-
-                    if (confidenceFrom > threshold && confidenceTo > threshold) {
+                    if (confidenceFrom > minConfidence && confidenceTo > minConfidence) {
                         const x1 = Number(output[from * 3 + 1]) * frameWidth;
                         const y1 = Number(output[from * 3]) * frameHeight;
                         const x2 = Number(output[to * 3 + 1]) * frameWidth;
@@ -181,27 +247,47 @@ function Video(): JSX.Element {
                         frame.drawLine(x1, y1, x2, y2, paint);
                     }
                 }
+                // ****** BELOW IS FOR DRAWING WHOLE BODY LINES ******
+                // for (let i = 5; i < output.length / 3; i++) {
+                //     const confidence = Number(output[i * 3 + 2]);
+                //     const threshold =
+                //         i >= 11 ? lowerBodyConfidenceThreshold : minConfidence;
+
+                //     if (confidence > threshold) {
+                //         const x = Number(output[i * 3 + 1]) * frameWidth;
+                //         const y = Number(output[i * 3]) * frameHeight;
+
+                //         frame.drawCircle(x, y, 2 * SCALE, paint);
+                //     }
+                // }
+
+                // for (let i = 0; i < lines.length; i += 2) {
+                //     const from = lines[i];
+                //     const to = lines[i + 1];
+
+                //     if (from <= 4 || to <= 4) continue;
+
+                //     const confidenceFrom = Number(output[from * 3 + 2]);
+                //     const confidenceTo = Number(output[to * 3 + 2]);
+
+                //     const threshold =
+                //         from >= 11 || to >= 11
+                //             ? lowerBodyConfidenceThreshold
+                //             : minConfidence;
+
+                //     if (confidenceFrom > threshold && confidenceTo > threshold) {
+                //         const x1 = Number(output[from * 3 + 1]) * frameWidth;
+                //         const y1 = Number(output[from * 3]) * frameHeight;
+                //         const x2 = Number(output[to * 3 + 1]) * frameWidth;
+                //         const y2 = Number(output[to * 3]) * frameHeight;
+
+                //         frame.drawLine(x1, y1, x2, y2, paint);
+                //     }
+                // }
             }
         },
         [plugin, paint, inputWidth, inputHeight, minConfidence, lowerBodyConfidenceThreshold],
     );
-    
-    // Update state periodically from refs
-    // useEffect(() => {
-    //     const interval = setInterval(() => {
-    //         if (angleRef.current !== null) {
-    //             setAngle(angleRef.current);
-    //             setFeedback(feedbackRef.current);
-    //         }
-    //     }, 100);
-
-    //     return () => clearInterval(interval);
-    // }, []);
-
-    useEffect(() => {
-        setFeedback('Correct Form'); // Hardcoded feedback
-        setAngle(45); // Hardcoded angle
-    }, []);
 
     // Permissions handling
     if (!hasPermission) return <PermissionsPage requestPermission={requestPermission} />;
@@ -217,12 +303,55 @@ function Video(): JSX.Element {
                 frameProcessor={frameProcessor}
                 format={format}
             />
+            <Modal visible={isModalVisible} transparent={true} animationType="slide">
+                <View style={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>Choose Exercise</Text>
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity
+                            style={styles.modalButton}
+                            onPress={() => handleSelectExercise('Curl')}
+                        >
+                            <Text style={styles.buttonText}>Bicep Curl</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.modalButton}
+                            onPress={() => handleSelectExercise('Shoulder Press')}
+                        >
+                            <Text style={styles.buttonText}>Shoulder Press</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
             <View style={styles.overlay}>
-                {angle !== null && (
-                    <Text style={styles.text}>
-                        {feedback}: {Math.round(angle)}°
-                    </Text>
-                )}
+                <Text style={styles.feedbackText}>Current Exercise: {exerciseName}</Text>
+            </View>
+
+            {/* Feedback Overlay */}
+            <View style={styles.overlay}>
+                <Text
+                    style={[
+                        styles.feedbackText,
+                        feedback.includes('<30 degrees')
+                            ? styles.incorrectFeedback // Red for incorrect form
+                            : styles.correctFeedback,  // Green for correct form
+                    ]}
+                >
+                    {feedback}: {angle !== null ? `${Math.round(angle)}°\n` : 'Loading...'}
+                    {exerciseName === "Shoulder Press" && (
+                        <Text
+                            style={[
+                                styles.feedbackText,
+                                rFeedback.includes('<90 degrees')
+                                    ? styles.incorrectFeedback // Red for incorrect form
+                                    : styles.correctFeedback,  // Green for correct form
+                            ]}
+                        >
+                            {rFeedback}: {rightArmAngle !== null ? `${Math.round(rightArmAngle)}°` : 'Loading...'}
+                        </Text>
+                    )}
+                </Text>
+
             </View>
 
             {/* Instruction Overlay */}
@@ -230,6 +359,9 @@ function Video(): JSX.Element {
                 <Text style={styles.instructionText}>
                     Keep your back straight and fully extend your arms!
                 </Text>
+                <TouchableOpacity style={styles.changeExercise} onPress={() => { setIsModalVisible(true); setExerciseName("") }}>
+                    <Text style={styles.instructionText}>Change Exercise</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -290,7 +422,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     confidenceText: {
-        color: 'white',
+        color: 'Black',
         fontSize: 16,
         marginBottom: 10,
     },
@@ -305,29 +437,78 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     buttonText: {
-        color: 'white',
+        color: 'Black',
         fontSize: 16,
     },
-    instructions: {
-        position: 'absolute',
-        bottom: 100,
+    changeExercise: {
+        backgroundColor: 'red',
+        width: 200,
+        marginLeft: 90,
+        marginTop: 10,
+        borderRadius: 10,
+    },
+    feedbackText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        textAlign: 'center',
         padding: 10,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 5,
+        marginBottom: 20,
     },
-    instructionText: {
+
+    correctFeedback: {
+        color: 'green', // Green text for correct form
+    },
+
+    incorrectFeedback: {
+        color: 'red', // Red text for incorrect form
+    },
+
+    overlay: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 200,
+        position: 'absolute',
+        top: '10%', // 👈 Increase this value if text is not visible
+        left: '10%',
+        right: '10%',
+        alignSelf: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 1)',
+        padding: 15,
+        borderRadius: 8,
+        zIndex: 10,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'black',
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
         color: 'white',
-        fontSize: 16,
+        marginBottom: 20,
         textAlign: 'center',
     },
-    overlay: {
+    modalButton: {
+        backgroundColor: 'red',
+        padding: 15,
+        marginHorizontal: 10,
+        borderRadius: 8,
+    },
+
+    instructions: {
         position: 'absolute',
-        top: '10%', // Position the overlay near the top of the screen
-        alignSelf: 'center', // Center it horizontally
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black background
-        padding: 10, // Add padding around the text
-        borderRadius: 8, // Rounded corners for the overlay box
-        zIndex: 10, // Ensure it stays above other components
+        bottom: 80, // Move it slightly higher
+        padding: 12,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 8,
+    },
+
+    instructionText: {
+        color: 'white',
+        fontSize: 18,
+        textAlign: 'center',
     },
 });
 

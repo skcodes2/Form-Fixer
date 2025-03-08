@@ -1,7 +1,7 @@
-import { ExerciseType } from "./types/PlanTypes";
-import { MuscleGroup } from "./types/PlanTypes";
-import { WorkoutParameters } from "./types/PlanTypes";
-import { ExerciseDataType } from "./types/PlanTypes";
+import { ExerciseType } from "../../types/PlanTypes";
+import { MuscleGroup } from "../../types/PlanTypes";
+import { WorkoutParameters } from "../../types/PlanTypes";
+import { ExerciseDataType } from "../../types/PlanTypes";
 
 type ExerciseOverrides = {
     name?: string;

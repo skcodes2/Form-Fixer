@@ -23,7 +23,7 @@ import AuthPut from '../../Fetchers/Auth/AuthPut';
 import AuthGet from '../../Fetchers/Auth/AuthGet';
 import { host } from '../index';
 import Exercise from 'app/WorkoutPlan/Exercise';
-import { ExerciseDataType, WorkoutParameters } from 'app/WorkoutPlan/types/PlanTypes';
+import { ExerciseDataType, WorkoutParameters } from '../../types/PlanTypes';
 
 const WorkoutPlan = () => {
     const { temporyPlansFetched, setTemporyPlansFetched, workoutPlanFetched, setWorkoutPlanFetched, fetched, setFetched, defaultPlan, activeRoutine, setActiveRoutine, routines, setRoutines, workoutPlans, setWorkoutPlans, setActivePlan, activePlan } = useWorkoutPlan();
