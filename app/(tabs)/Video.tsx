@@ -22,9 +22,9 @@ import getBestFormat from '../formFilter';
 import { useRunOnJS } from 'react-native-worklets-core';
 
 
-function tensorToString(tensor: TensorflowModel['inputs'][number]): string {
-    return `${tensor.dataType} [${tensor.shape}]`;
-}
+// function tensorToString(tensor: TensorflowModel['inputs'][number]): string {
+//     return `${tensor.dataType} [${tensor.shape}]`;
+// }
 
 
 
@@ -170,9 +170,9 @@ function Video(): JSX.Element {
                     updateAngleRight(rangleDegrees);
 
                     if (rangleDegrees < 75) {
-                        updateRightFeedback('<75 degrees detected on Right Arm, increase angle');
+                        updateRightFeedback('<75 degrees detected on Right Arm! Increase angle');
                     } else
-                        updateRightFeedback('Right Arm: ');
+                        updateRightFeedback('Right Arm CORRECT');
 
                 }
                 // Compute segment lengths for left arm
@@ -185,13 +185,12 @@ function Video(): JSX.Element {
                 const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosTheta))); // Clamp to avoid NaN
                 const angleDegrees = (angleRadians * 180) / Math.PI; // Convert to degrees
 
-                // Use `useRunOnJS` to update state
                 updateAngle(angleDegrees);
 
                 if (exerciseName === "Curl") {
 
-                    if (angleDegrees >= 30 && angleDegrees <= 40) {
-                        updateFeedback('<30 degrees detected, too tensed, increase angle');
+                    if (angleDegrees < 35) {
+                        updateFeedback('<35 degrees detected, too tensed! Increase angle');
                     } else {
                         updateFeedback('Correct Form');
                     }
@@ -199,9 +198,9 @@ function Video(): JSX.Element {
 
                 if (exerciseName === "Shoulder Press") {
                     if (angleDegrees < 75) {
-                        updateFeedback('<75 degrees detected on Left Arm, increase angle');
+                        updateFeedback('<75 degrees detected on Left Arm! Increase angle');
                     } else
-                        updateFeedback('Left Arm: ');
+                        updateFeedback('Left Arm CORRECT');
                 }
 
                 // Extract keypoints for LEFT arm ONLY
@@ -327,32 +326,35 @@ function Video(): JSX.Element {
                 <Text style={styles.feedbackText}>Current Exercise: {exerciseName}</Text>
             </View>
 
-            {/* Feedback Overlay */}
             <View style={styles.overlay}>
                 <Text
                     style={[
-                        styles.feedbackText,
-                        feedback.includes('<30 degrees')
-                            ? styles.incorrectFeedback // Red for incorrect form
-                            : styles.correctFeedback,  // Green for correct form
+                    styles.feedbackText,
+                    // Apply red style when:
+                    // - For Curl: feedback contains '<35 degrees'
+                    // - For Shoulder Press: feedback contains '<75 degrees'
+                    (exerciseName === "Curl" && feedback.includes('<35 degrees')) ||
+                    (exerciseName === "Shoulder Press" && feedback.includes('<75 degrees'))
+                        ? styles.incorrectFeedback
+                        : styles.correctFeedback,
                     ]}
                 >
-                    {feedback}: {angle !== null ? `${Math.round(angle)}°\n` : 'Loading...'}
+                    {feedback} ~ {angle !== null ? `${Math.round(angle)}°\n` : 'Loading...'}
                     {exerciseName === "Shoulder Press" && (
-                        <Text
-                            style={[
-                                styles.feedbackText,
-                                rFeedback.includes('<90 degrees')
-                                    ? styles.incorrectFeedback // Red for incorrect form
-                                    : styles.correctFeedback,  // Green for correct form
-                            ]}
-                        >
-                            {rFeedback}: {rightArmAngle !== null ? `${Math.round(rightArmAngle)}°` : 'Loading...'}
-                        </Text>
+                    <Text
+                        style={[
+                        styles.feedbackText,
+                        rFeedback.includes('<75 degrees')
+                            ? styles.incorrectFeedback
+                            : styles.correctFeedback,
+                        ]}
+                    >
+                        {rFeedback} ~ {rightArmAngle !== null ? `${Math.round(rightArmAngle)}°` : 'Loading...'}
+                    </Text>
                     )}
                 </Text>
-
             </View>
+
 
             {/* Instruction Overlay */}
             <View style={styles.instructions}>
