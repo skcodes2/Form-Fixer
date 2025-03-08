@@ -151,6 +151,8 @@ const WorkoutPlan = () => {
     };
 
     useEffect(() => {
+        console.log(hasPlan)
+
         if (fetched) setLoading(false);
         if (!fetched) {
             if (!hasPlan) {
@@ -162,7 +164,7 @@ const WorkoutPlan = () => {
                 if (user)
                     setUser({ ...user, hasPlan: true });
             }
-            if (token)
+            else if (token)
                 AuthGet(host + '/workouts/get-workout', setTemporyPlans, () => { }, token);
             setFetched(true);
         }

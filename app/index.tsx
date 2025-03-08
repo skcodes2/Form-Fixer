@@ -27,7 +27,7 @@ import AuthPost from '../Fetchers/Auth/AuthDelete';
 import Post from '../Fetchers/NoAuth/Post';
 import Put from '../Fetchers/NoAuth/Put';
 
-export let host = "http://10.0.0.222:3000"
+export let host = "http://172.30.139.115:3000"
 
 const redirectUri = makeRedirectUri({
   scheme: "com.formfix.app", // Ensure this matches your Android package name
