@@ -15,11 +15,10 @@ type Meal = {
 
 export default function MealPlan() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [meals, setMeals] = useState<Meal[]>([]); // <-- Use the Meal[] type here
+  const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch meal list based on search
   const fetchMeals = async () => {
     if (!searchQuery) {
       setError("Please enter a food name to search.");
@@ -32,11 +31,10 @@ export default function MealPlan() {
         params: {
           apiKey: API_KEY,
           query: searchQuery,
-          number: 5,
-          addRecipeInformation: true, // so we get sourceUrl in the results
+          number: 15,
+          addRecipeInformation: true,
         },
       });
-      // response.data.results should match the Meal type
       setMeals(response.data.results);
     } catch (err) {
       setError("Failed to fetch meals. Try again later.");
@@ -45,8 +43,7 @@ export default function MealPlan() {
     }
   };
 
-  // Open recipe website
-  const openWebsite = (sourceUrl: string) => { // <-- Declare type string
+  const openWebsite = (sourceUrl: string) => {
     if (sourceUrl) {
       Linking.openURL(sourceUrl);
     } else {
@@ -56,22 +53,21 @@ export default function MealPlan() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🔍 Search for Recipes</Text>
+      <Text style={styles.title}>Search for Recipes</Text>
 
-      {/* Search Bar */}
       <TextInput
         style={styles.input}
         placeholder="Enter a meal name (e.g., pasta)"
-        placeholderTextColor="#999"
+        placeholderTextColor="#aaa"
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
 
-      <Button mode="contained" onPress={fetchMeals} style={styles.button}>
+      <Button mode="contained" onPress={fetchMeals} style={styles.button} labelStyle={styles.buttonLabel}>
         Search
       </Button>
 
-      {loading && <ActivityIndicator size="large" color="#6200ee" />}
+      {loading && <ActivityIndicator size="large" color="#990000" />}
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <ScrollView style={styles.mealList}>
@@ -84,6 +80,7 @@ export default function MealPlan() {
                 mode="outlined" 
                 onPress={() => openWebsite(meal.sourceUrl)} 
                 style={styles.websiteButton}
+                labelStyle={styles.websiteButtonLabel}
               >
                 View Recipe
               </Button>
@@ -98,36 +95,44 @@ export default function MealPlan() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#000',
+    paddingHorizontal: 16,
+    paddingTop: 60,
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: 'bold',
+    color: 'white',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   input: {
     height: 45,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#555',
     borderRadius: 8,
     paddingHorizontal: 10,
     fontSize: 16,
     marginBottom: 10,
-    backgroundColor: '#fff',
+    backgroundColor: '#333',
+    color: '#fff',
   },
   button: {
     marginBottom: 10,
+    backgroundColor: '#990000',
+  },
+  buttonLabel: {
+    color: '#fff',
   },
   mealList: {
     marginTop: 10,
   },
   card: {
-    marginBottom: 10,
+    marginBottom: 20,
     borderRadius: 10,
     overflow: 'hidden',
     elevation: 3,
+    backgroundColor: '#222', 
   },
   image: {
     width: '100%',
@@ -137,9 +142,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 5,
+    color: '#fff',
   },
   websiteButton: {
     marginTop: 5,
+    borderColor: '#990000',
+    backgroundColor: '#990000',
+  },
+  websiteButtonLabel: {
+    color: '#fff',
   },
   error: {
     color: 'red',
