@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "FormFixer",
-    "slug": "formfixer",
+    "name": "FormFixer.AI",
+    "slug": "capstone-formfixer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -35,7 +35,8 @@
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
-      ]
+      ],
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "bundler": "metro",
@@ -74,7 +75,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "34e1f3a1-dcc4-4288-a729-11f7b98403e8"
+        "projectId": "274799e0-9313-46a0-a40c-5edd363f49aa"
       }
     },
     "splash": {

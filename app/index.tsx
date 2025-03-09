@@ -27,7 +27,7 @@ import AuthPost from '../Fetchers/Auth/AuthDelete';
 import Post from '../Fetchers/NoAuth/Post';
 import Put from '../Fetchers/NoAuth/Put';
 
-export let host = "http://172.30.139.115:3000"
+export let host = "http://172.30.143.89:3000"
 
 const redirectUri = makeRedirectUri({
   scheme: "com.formfix.app", // Ensure this matches your Android package name
@@ -44,7 +44,7 @@ export default function Index() {
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId,
     scopes: ["openid", "profile", "email"], // Ensure "openid" is included
-    responseType: "id_token", // Correct response type
+    responseType: "code", // Correct response type
     redirectUri, // Ensure this is properly set
   });
 
