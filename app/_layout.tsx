@@ -39,7 +39,7 @@ export default function RootLayout() {
             <Stack.Screen name="+not-found" />
             <Stack.Screen name='index' options={{ headerShown: false }} />
             <Stack.Screen name='register' options={{ headerShown: false }} />
-            <Stack.Screen name='AccountSettingPage' />
+            <Stack.Screen name='AccountSettingPage' options={{ headerShown: false }}/>
             <Stack.Screen name='WorkoutPlan/components/ExercisePage' options={{ headerShown: false }} />
             <Stack.Screen name='WorkoutPlan/components/UpdateExercisePage' options={{ headerShown: false }} />
             <Stack.Screen name='forgetPassword' />
