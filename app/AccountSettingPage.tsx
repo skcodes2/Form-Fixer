@@ -144,7 +144,7 @@ const AccountSettingPage = () => {
                 style={[styles.button, { backgroundColor: globalStyle.colors.secondary }]}
                 onPress={() => setIsModalVisible(true)}
             >
-                <Text style={styles.buttonText}>Forgot Password</Text>
+                <Text style={styles.buttonText1}>Forgot Password</Text>
             </TouchableOpacity>
 
             {/* Forgot Password Modal */}
@@ -166,7 +166,7 @@ const AccountSettingPage = () => {
                         />
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: globalStyle.colors.primary }]}
+                                style={[styles.modalButton, { backgroundColor: '#8F0404' }]}
                                 onPress={handleForgotPassword}
                             >
                                 <Text style={styles.modalButtonText}>Send Email</Text>
@@ -186,16 +186,63 @@ const AccountSettingPage = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20 },
-    title: { fontSize: 24, color: '#fff', marginTop: 80, marginBottom: 20, textAlign: 'center' },
-    inputContainer: { marginBottom: 15 },
-    label: { fontSize: 16, color: '#fff', marginBottom: 5 },
-    input: { padding: 10, borderRadius: 5, backgroundColor: '#333', color: '#fff' },
-    readOnly: { backgroundColor: '#444' },
-    editable: { backgroundColor: '#555' },
-    buttonContainer: { marginTop: 20 },
-    button: { backgroundColor: '#FF0000', padding: 15, borderRadius: 5, marginBottom: 10 },
-    buttonText: { color: '#000', fontSize: 16, textAlign: 'center' },
+    container: {
+        flex: 1,
+        padding: 20,
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginTop: 80,
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    inputContainer: {
+        marginBottom: 15,
+    },
+    label: {
+        fontSize: 16,
+        color: '#fff',
+        marginBottom: 5,
+    },
+    input: {
+        padding: 12,
+        borderRadius: 10,
+        backgroundColor: '#222',
+        borderWidth: 1,
+        borderColor: 'white',
+        color: '#fff',
+    },
+    readOnly: {
+        backgroundColor: '#333',
+    },
+    editable: {
+        backgroundColor: '#222',
+    },
+    buttonContainer: {
+        marginTop: 20,
+    },
+    button: {
+        backgroundColor: '#8F0404',
+        padding: 12,
+        borderRadius: 15,
+        borderWidth: 2,
+        borderColor: 'white',
+        marginBottom: 10,
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    buttonText1: {
+        color: '#000',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
     modalOverlay: {
         flex: 1,
         justifyContent: 'center',
@@ -204,19 +251,27 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         width: '80%',
-        backgroundColor: 'white',
+        backgroundColor: '#222',
         borderRadius: 10,
         padding: 20,
         alignItems: 'center',
+        borderWidth: 2,
+        borderColor: 'white',
     },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        color: '#fff',
+    },
     modalInput: {
         width: '100%',
         borderBottomWidth: 1,
-        borderColor: 'gray',
+        borderColor: 'white',
         padding: 8,
         marginBottom: 20,
         fontSize: 16,
+        color: '#fff',
     },
     modalButtons: {
         flexDirection: 'row',
@@ -230,8 +285,16 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         alignItems: 'center',
     },
-    modalButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-    errorText: { color: 'red', fontSize: 16, textAlign: 'center' },
+    modalButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 16,
+        textAlign: 'center',
+    },
 });
 
 export default AccountSettingPage;
