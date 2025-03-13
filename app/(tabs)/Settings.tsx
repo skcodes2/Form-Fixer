@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Switch, Platform } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,11 +7,16 @@ import { useRouter } from 'expo-router';
 import useUser from '../hooks/UserContext';
 import AuthPost from '../../Fetchers/Auth/AuthPost';
 import { host } from '../index';
+import useWorkoutPlan from 'app/hooks/WorkoutPlanContext';
+import Routine from 'app/WorkoutPlan/Routine';
+import Plan from 'app/WorkoutPlan/Plan';
 
 export default function Settings() {
     const globalStyle = useGlobalStyle();
     const router = useRouter();
     const { user, token, setToken, setUser } = useUser();
+    const defaultRoutine = new Routine("Routine 1", null)
+    const { setWorkoutPlans, setActivePlan, setChosenExercise, setTemporyPlansFetched, setRoutines, setFetched, setActiveRoutine, setWorkoutPlanFetched } = useWorkoutPlan();
 
     const [dropdowns, setDropdowns] = useState({
         notification: false,
@@ -21,7 +26,22 @@ export default function Settings() {
     });
 
     const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
-    const [profileImage, setProfileImage] = useState(user?.profilePicture || null);
+
+    // Build the full image URL if user.profilePicture exists
+    const getFullProfileImage = () => {
+        if (user?.profilePicture) {
+            return `${host}${user.profilePicture}`;
+        }
+        return null;
+    };
+
+    // Local state for immediate updates (if needed)
+    const [profileImage, setProfileImage] = useState(getFullProfileImage());
+
+    // Update local state when user changes (e.g. after login or profile update)
+    useEffect(() => {
+        setProfileImage(getFullProfileImage());
+    }, [user]);
 
     if (!user) {
         return (
@@ -52,6 +72,14 @@ export default function Settings() {
         );
         setUser(null);
         setToken('');
+        setFetched(false)
+        setRoutines([defaultRoutine])
+        setWorkoutPlans([new Plan("WorkoutPlan", [defaultRoutine])])
+        setActivePlan(new Plan("WorkoutPlan", [defaultRoutine]))
+        setActiveRoutine(defaultRoutine)
+        setChosenExercise(undefined)
+        setWorkoutPlanFetched(false)
+        setTemporyPlansFetched(false)
         router.replace('/');
     };
 
@@ -86,6 +114,7 @@ export default function Settings() {
             Alert.alert('Error', 'Unable to select an image. Please try again.');
         }
     };
+
     const uploadProfilePicture = async (imageUri: string) => {
         try {
             const formData = new FormData();
@@ -122,7 +151,11 @@ export default function Settings() {
             // Update user context with the new profile picture URL
             setUser({ ...user, profilePicture: data.imageUrl });
         } catch (error) {
-            console.error("Error uploading profile picture:", error.message);
+            if (error instanceof Error) {
+                console.error("Error uploading profile picture:", error.message);
+            } else {
+                console.error("Unexpected error", error);
+            }
             Alert.alert("Error", "Something went wrong while uploading your profile picture. Please try again.");
         }
     };
@@ -241,7 +274,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 15,
         borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        borderBottomColor: '#fff',
     },
     menuText: {
         fontSize: 18,
