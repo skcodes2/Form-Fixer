@@ -17,6 +17,7 @@ import * as Haptics from 'expo-haptics';
 import * as WebBrowser from "expo-web-browser"
 import * as Google from "expo-auth-session/providers/google"
 import { makeRedirectUri } from "expo-auth-session";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const webClientId = "435855242606-k8gr54v7vjc5kber8g8qd0189800q48j.apps.googleusercontent.com"
 const androidClientId = "435855242606-s3l91u6n559pserllmuao0kks3ru2bgq.apps.googleusercontent.com"
@@ -27,7 +28,7 @@ import AuthPost from '../Fetchers/Auth/AuthDelete';
 import Post from '../Fetchers/NoAuth/Post';
 import Put from '../Fetchers/NoAuth/Put';
 
-export let host = "http://172.30.143.89:3000"
+export let host = "http://10.0.0.3:3000"
 
 const redirectUri = makeRedirectUri({
   scheme: "com.formfix.app", // Ensure this matches your Android package name
@@ -118,10 +119,34 @@ export default function Index() {
       host + "/users/login",
       { email, password },
       (error) => { setError(error) },
-      () => { router.replace('/(tabs)/Home'); },
-      (data) => {
-        setUser(data[0])
-        setToken(data[1])
+      () => {
+        router.replace('/onboarding/OnboardingFlow');
+      },
+      async (data) => {
+
+        const userObj = data.user;
+        const token = data.token;
+
+        setUser(userObj);
+        setToken(token);
+
+
+        // if (typeof userObj.hasCompletedOnboarding === "undefined") {
+        //   userObj.hasCompletedOnboarding = false;
+        // }
+
+        const mergedUserData = {
+          ...userObj,
+          token,
+        };
+        try {
+          await AsyncStorage.setItem("user", JSON.stringify(mergedUserData));
+          console.log("User data stored in AsyncStorage.");
+        } catch (err) {
+          console.error("Error storing user data:", err);
+        }
+
+        router.replace('/onboarding/OnboardingFlow');
       }
     )
 

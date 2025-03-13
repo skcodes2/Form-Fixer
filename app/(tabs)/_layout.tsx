@@ -1,11 +1,13 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import { Tabs } from 'expo-router'
-import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import useGlobalStyle from '../hooks/GlobalStyleContext';
+// app/(tabs)/_layout.tsx
+import React from "react";
+import { Tabs } from "expo-router";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+
+import useGlobalStyle from "../hooks/GlobalStyleContext";
 
 export default function TabLayout() {
-    const styles = useGlobalStyle()
+    const styles = useGlobalStyle();
+
     return (
         <Tabs
             screenOptions={{
@@ -13,28 +15,28 @@ export default function TabLayout() {
                 tabBarInactiveTintColor: styles.colors.secondary,
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: styles.colors.bgColor, // Background color
+                    backgroundColor: styles.colors.bgColor,
                     borderTopWidth: 0,
-                    height: 55, // Reduced height for a tighter look
+                    height: 55,
                     paddingTop: 0,
-                    paddingBottom: 0, // Removing extra padding
+                    paddingBottom: 0,
                 },
                 tabBarLabelStyle: {
-                    fontFamily: styles.fontStyle.textFont, // Custom font
-                    fontSize: styles.fontSize.xs, // Even smaller font size
-                    fontWeight: 'bold', // Optional
-                    marginBottom: -2, // Bring text closer to the icons
+                    fontFamily: styles.fontStyle.textFont,
+                    fontSize: styles.fontSize.xs,
+                    fontWeight: "bold",
+                    marginBottom: -2,
                 },
                 tabBarItemStyle: {
-                    paddingHorizontal: -5, // Reduce horizontal spacing
-                    marginHorizontal: -2, // Reduce margin between tabs
-                }
+                    paddingHorizontal: -5,
+                    marginHorizontal: -2,
+                },
             }}
         >
             <Tabs.Screen
                 name="Home"
                 options={{
-                    title: 'Home',
+                    title: "Home",
                     tabBarIcon: ({ color, size }) => (
                         <MaterialIcons name="home" size={size - 6} color={color} />
                     ),
@@ -43,7 +45,7 @@ export default function TabLayout() {
             <Tabs.Screen
                 name="Video"
                 options={{
-                    title: 'Video',
+                    title: "Video",
                     tabBarIcon: ({ color, size }) => (
                         <FontAwesome name="video-camera" size={size - 6} color={color} />
                     ),
@@ -52,16 +54,16 @@ export default function TabLayout() {
             <Tabs.Screen
                 name="WorkoutPlan"
                 options={{
-                    title: 'Plan',
+                    title: "Plan",
                     tabBarIcon: ({ color, size }) => (
                         <MaterialIcons name="calendar-today" size={size - 6} color={color} />
                     ),
-                }} 
+                }}
             />
             <Tabs.Screen
                 name="MealPlan"
                 options={{
-                    title: 'Meal',
+                    title: "Meal",
                     tabBarIcon: ({ color, size }) => (
                         <MaterialIcons name="fastfood" size={size - 6} color={color} />
                     ),
@@ -77,5 +79,5 @@ export default function TabLayout() {
                 }}
             />
         </Tabs>
-    )
+    );
 }
