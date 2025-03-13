@@ -189,7 +189,6 @@ function Video(): JSX.Element {
                         const rangleRadians = Math.acos(Math.max(-1, Math.min(1, rcosTheta))); // Clamp to avoid NaN
                         const rangleDegrees = (rangleRadians * 180) / Math.PI; // Convert to degrees
 
-                        // Use `useRunOnJS` to update state
                         updateAngleRight(rangleDegrees);
                         if (rangleDegrees > 170 && !up) {
                             updateDown(true);
@@ -223,24 +222,54 @@ function Video(): JSX.Element {
                     updateAngle(angleDegrees);
 
                     if (exerciseName === "Curl") {
+                        // Existing rep count logic for angle-based curl detection:
                         if (angleDegrees > 170 && !up) {
                             updateDown(true);
                         }
-                        if (angleDegrees < 40 && down) {
+                        if (angleDegrees < 45 && down) {
                             updateUp(true);
                         }
-
                         if (up && down) {
                             repCounter(repCount + 1);
                             updateUp(false);
                             updateDown(false);
                         }
-
+                    
+                        // Extract left hip keypoint (keypoint 11) for torso approximation
+                        const xLeftHip = Number(output[11 * 3 + 1]) * frameWidth;
+                        const yLeftHip = Number(output[11 * 3]) * frameHeight;
+                    
+                        // Compute the shoulder-to-hip distance (used to scale the elbow threshold)
+                        // distance of a line formula
+                        const shoulderHipDistance = Math.sqrt(
+                            (xLeftHip - xLeftShoulder) ** 2 +
+                            (yLeftHip - yLeftShoulder) ** 2
+                        );
+                    
+                        // Compute the perpendicular distance from the elbow to the line joining shoulder and hip
+                        // perpendicular distance formula
+                        const elbowDistance = Math.abs(
+                            (xElbow - xLeftShoulder) * (yLeftHip - yLeftShoulder) -
+                            (yElbow - yLeftShoulder) * (xLeftHip - xLeftShoulder)
+                        ) / shoulderHipDistance;
+                    
+                        // Define a threshold (ratio towards the length of your shouler to hip)
+                        const elbowThreshold = shoulderHipDistance * 0.25;
+                    
+                        // Separate checks for angle and elbow position
+                        let feedbackMessage = '';
+                    
                         if (angleDegrees < 35) {
-                            updateFeedback('<35 degrees detected, too tensed! Increase angle');
-                        } else {
-                            updateFeedback('Correct Form');
+                            feedbackMessage += '<35° DETECTED TOO TENSED! Increase angle. ';
                         }
+                        if (elbowDistance > elbowThreshold) {
+                            feedbackMessage += 'Elbow too far forward! Tuck elbows in.';
+                        }
+                        if (feedbackMessage === '') {
+                            feedbackMessage = 'Correct Form';
+                        }
+                    
+                        updateFeedback(feedbackMessage);
                     }
 
                     if (exerciseName === "Shoulder Press") {
@@ -398,7 +427,7 @@ function Video(): JSX.Element {
                         // Apply red style when:
                         // - For Curl: feedback contains '<35 degrees'
                         // - For Shoulder Press: feedback contains '<70 degrees'
-                        (exerciseName === "Curl" && feedback.includes('<35 degrees')) ||
+                        (exerciseName === "Curl" && (feedback.includes('<35°') || feedback.includes('Elbow'))) ||
                             (exerciseName === "Shoulder Press" && feedback.includes('<70 degrees'))
                             ? styles.incorrectFeedback
                             : styles.correctFeedback,
