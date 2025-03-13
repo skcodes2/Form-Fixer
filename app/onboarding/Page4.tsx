@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 const genders = [
-    { name: "Male", icon: require("./profile.png") },
-    { name: "Female", icon: require("./profile.png") },
+    { name: "Male", icon: require("../../assets/images/onboarding/man.png") },
+    { name: "Female", icon: require("../../assets/images/onboarding/woman.png") },
 ];
 
 const GenderSelection: React.FC<{ onNext: () => void; onBack: () => void }> = ({ onNext, onBack }) => {

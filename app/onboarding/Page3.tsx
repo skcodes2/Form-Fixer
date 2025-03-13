@@ -3,15 +3,15 @@ import { View, Text, TouchableOpacity, Image, FlatList, StyleSheet } from "react
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 const interests = [
-    { name: "Fashion", icon: require("./profile.png") },
-    { name: "Organic", icon: require("./profile.png") },
-    { name: "Meditation", icon: require("./profile.png") },
-    { name: "Fitness", icon: require("./profile.png") },
-    { name: "Smoke free", icon: require("./profile.png") },
-    { name: "Sleep", icon: require("./profile.png") },
-    { name: "Health", icon: require("./profile.png") },
-    { name: "Running", icon: require("./profile.png") },
-    { name: "Vegan", icon: require("./profile.png") },
+    { name: "Technique", icon: require("../../assets/images/onboarding/technique.png") },
+    { name: "Alignment", icon: require("../../assets/images/onboarding/alignment.png") },
+    { name: "Posture", icon: require("../../assets/images/onboarding/posture.png") },
+    { name: "Mobility", icon: require("../../assets/images/onboarding/mobility.png") },
+    { name: "Stability", icon: require("../../assets/images/onboarding/stability.png") },
+    { name: "Endurance", icon: require("../../assets/images/onboarding/endurance.png") },
+    { name: "Strength", icon: require("../../assets/images/onboarding/strength.png") },
+    { name: "Recovery", icon: require("../../assets/images/onboarding/recovery.png") },
+    { name: "Precision", icon: require("../../assets/images/onboarding/precision.png") },
 ];
 
 const CustomizeInterests: React.FC<{ onNext: () => void; onBack: () => void }> = ({ onNext, onBack }) => {
@@ -48,7 +48,9 @@ const CustomizeInterests: React.FC<{ onNext: () => void; onBack: () => void }> =
                         onPress={() => toggleSelection(item.name)}
                     >
                         <Image source={item.icon} style={styles.interestIcon} />
-                        <Text style={styles.interestText}>{item.name}</Text>
+                        <Text style={[styles.interestText, { color: selectedInterests.includes(item.name) ? "red" : "black" }]}>
+                            {item.name}
+                        </Text>
                     </TouchableOpacity>
                 )}
             />
@@ -89,7 +91,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         textAlign: "center",
         marginTop: 120, // Pushes the title lower
-        color: "white"
+        color: "white",
     },
     interestsContainer: {
         marginTop: 50,
@@ -98,9 +100,10 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     interestButton: {
-        width: 90,
-        height: 90,
-        margin: 8,
+        width: 95,
+        height: 95,
+        marginTop: 15,
+        margin: 15,
         alignItems: "center",
         justifyContent: "center",
         borderRadius: 45,
@@ -111,15 +114,13 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     selectedInterest: {
-        borderWidth: 3,
+        borderWidth: 5,
         borderColor: "#990000",
     },
     interestIcon: {
         width: 40,
         height: 40,
-        borderRadius: 60,
-        borderWidth: 2,
-        borderColor: 'white'
+        borderColor: "white",
     },
     interestText: {
         fontSize: 12,
