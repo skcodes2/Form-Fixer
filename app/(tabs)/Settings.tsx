@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Switch, Platform } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,7 +21,22 @@ export default function Settings() {
     });
 
     const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
-    const [profileImage, setProfileImage] = useState(user?.profilePicture || null);
+
+    // Build the full image URL if user.profilePicture exists
+    const getFullProfileImage = () => {
+        if (user?.profilePicture) {
+            return `${host}${user.profilePicture}`;
+        }
+        return null;
+    };
+
+    // Local state for immediate updates (if needed)
+    const [profileImage, setProfileImage] = useState(getFullProfileImage());
+
+    // Update local state when user changes (e.g. after login or profile update)
+    useEffect(() => {
+        setProfileImage(getFullProfileImage());
+    }, [user]);
 
     if (!user) {
         return (
@@ -86,6 +101,7 @@ export default function Settings() {
             Alert.alert('Error', 'Unable to select an image. Please try again.');
         }
     };
+    
     const uploadProfilePicture = async (imageUri: string) => {
         try {
             const formData = new FormData();
@@ -122,7 +138,11 @@ export default function Settings() {
             // Update user context with the new profile picture URL
             setUser({ ...user, profilePicture: data.imageUrl });
         } catch (error) {
-            console.error("Error uploading profile picture:", error.message);
+            if (error instanceof Error) {
+                console.error("Error uploading profile picture:", error.message);
+            } else {
+                console.error("Unexpected error", error);
+            }
             Alert.alert("Error", "Something went wrong while uploading your profile picture. Please try again.");
         }
     };

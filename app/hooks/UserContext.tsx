@@ -10,6 +10,7 @@ export interface User {
     password: string;
     isLoggedIn: boolean;
     hasPlan: boolean;
+    profilePicture: string | null;
 }
 
 // Define the structure of the context value
