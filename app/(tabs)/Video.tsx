@@ -43,6 +43,10 @@ function Video(): JSX.Element {
     const { hasPermission, requestPermission } = useCameraPermission();
     const { resize } = useResizePlugin();
     const [isModalVisible, setIsModalVisible] = useState(true);
+    const [down, setDown] = useState(false);
+    const [up, setUp] = useState(false);
+    const [repCount, setRepCount] = useState(0);
+    const [start, setStart] = useState(false);
 
     const delegate = Platform.OS === 'ios' ? 'core-ml' : undefined;
     const plugin = useTensorflowModel(require('./poseModel.tflite'), delegate);
@@ -102,6 +106,8 @@ function Video(): JSX.Element {
         setAngle(angle);
     }, []);
 
+    const updateStart = useRunOnJS((start) => { setStart(start); }, []);
+
     const updateAngleRight = useRunOnJS((angle) => {
         setRightArmAngle(angle);
     }, []);
@@ -113,6 +119,21 @@ function Video(): JSX.Element {
     const updateFeedback = useRunOnJS((feedback) => {
         setFeedback(feedback);
     }, []);
+
+    const updateUp = useRunOnJS((feedback) => {
+        setUp(feedback);
+    }
+        , []);
+
+    const updateDown = useRunOnJS((feedback) => {
+        setDown(feedback);
+    }
+        , []);
+
+    const repCounter = useRunOnJS((feedback) => {
+        setRepCount(feedback);
+    }
+        , []);
 
     const frameProcessor = useSkiaFrameProcessor(
         (frame) => {
@@ -135,72 +156,100 @@ function Video(): JSX.Element {
                 const frameWidth = frame.width;
                 const frameHeight = frame.height;
 
-                // Extract keypoints for LEFT arm ONLY
-                const xLeftShoulder = Number(output[5 * 3 + 1]) * frameWidth;  // Left Shoulder (5)
-                const yLeftShoulder = Number(output[5 * 3]) * frameHeight;
+                if (start) {
 
-                const xElbow = Number(output[7 * 3 + 1]) * frameWidth;  // Left Elbow (7)
-                const yElbow = Number(output[7 * 3]) * frameHeight;
+                    // Extract keypoints for LEFT arm ONLY
+                    const xLeftShoulder = Number(output[5 * 3 + 1]) * frameWidth;  // Left Shoulder (5)
+                    const yLeftShoulder = Number(output[5 * 3]) * frameHeight;
 
-                const xWrist = Number(output[9 * 3 + 1]) * frameWidth;  // Left Wrist (9)
-                const yWrist = Number(output[9 * 3]) * frameHeight;
+                    const xElbow = Number(output[7 * 3 + 1]) * frameWidth;  // Left Elbow (7)
+                    const yElbow = Number(output[7 * 3]) * frameHeight;
 
-                // Right arm keypoints
-                if (exerciseName === "Shoulder Press") {
-                    const xRightShoulder = Number(output[6 * 3 + 1]) * frameWidth;  // Right Shoulder (6)
-                    const yRightShoulder = Number(output[6 * 3]) * frameHeight;
+                    const xWrist = Number(output[9 * 3 + 1]) * frameWidth;  // Left Wrist (9)
+                    const yWrist = Number(output[9 * 3]) * frameHeight;
 
-                    const xRElbow = Number(output[8 * 3 + 1]) * frameWidth;  // Right Elbow (8)
-                    const yRElbow = Number(output[8 * 3]) * frameHeight;
+                    // Right arm keypoints
+                    if (exerciseName === "Shoulder Press") {
+                        const xRightShoulder = Number(output[6 * 3 + 1]) * frameWidth;  // Right Shoulder (6)
+                        const yRightShoulder = Number(output[6 * 3]) * frameHeight;
 
-                    const xRWrist = Number(output[10 * 3 + 1]) * frameWidth;  // Right Wrist (10)
-                    const yRWrist = Number(output[10 * 3]) * frameHeight;
+                        const xRElbow = Number(output[8 * 3 + 1]) * frameWidth;  // Right Elbow (8)
+                        const yRElbow = Number(output[8 * 3]) * frameHeight;
 
-                    // Compute segment lengths for right arm
-                    const rhumerusLength = Math.sqrt((xRElbow - xRightShoulder) ** 2 + (yRElbow - yRightShoulder) ** 2); // Shoulder to Elbow
-                    const rforearmLength = Math.sqrt((xRWrist - xRElbow) ** 2 + (yRWrist - yRElbow) ** 2); // Elbow to Wrist
-                    const rshouderToWristLength = Math.sqrt((xRWrist - xRightShoulder) ** 2 + (yRWrist - yRightShoulder) ** 2); // Shoulder to Wrist
+                        const xRWrist = Number(output[10 * 3 + 1]) * frameWidth;  // Right Wrist (10)
+                        const yRWrist = Number(output[10 * 3]) * frameHeight;
 
-                    // Use the Law of Cosines to calculate the angle at the elbow (keypoint 8)
-                    const rcosTheta = (rhumerusLength ** 2 + rforearmLength ** 2 - rshouderToWristLength ** 2) / (2 * rhumerusLength * rforearmLength);
-                    const rangleRadians = Math.acos(Math.max(-1, Math.min(1, rcosTheta))); // Clamp to avoid NaN
-                    const rangleDegrees = (rangleRadians * 180) / Math.PI; // Convert to degrees
+                        // Compute segment lengths for right arm
+                        const rhumerusLength = Math.sqrt((xRElbow - xRightShoulder) ** 2 + (yRElbow - yRightShoulder) ** 2); // Shoulder to Elbow
+                        const rforearmLength = Math.sqrt((xRWrist - xRElbow) ** 2 + (yRWrist - yRElbow) ** 2); // Elbow to Wrist
+                        const rshouderToWristLength = Math.sqrt((xRWrist - xRightShoulder) ** 2 + (yRWrist - yRightShoulder) ** 2); // Shoulder to Wrist
 
-                    // Use `useRunOnJS` to update state
-                    updateAngleRight(rangleDegrees);
+                        // Use the Law of Cosines to calculate the angle at the elbow (keypoint 8)
+                        const rcosTheta = (rhumerusLength ** 2 + rforearmLength ** 2 - rshouderToWristLength ** 2) / (2 * rhumerusLength * rforearmLength);
+                        const rangleRadians = Math.acos(Math.max(-1, Math.min(1, rcosTheta))); // Clamp to avoid NaN
+                        const rangleDegrees = (rangleRadians * 180) / Math.PI; // Convert to degrees
 
-                    if (rangleDegrees < 75) {
-                        updateRightFeedback('<75 degrees detected on Right Arm! Increase angle');
-                    } else
-                        updateRightFeedback('Right Arm CORRECT');
+                        // Use `useRunOnJS` to update state
+                        updateAngleRight(rangleDegrees);
+                        if (rangleDegrees > 170 && !up) {
+                            updateDown(true);
+                        }
+                        if (rangleDegrees < 80 && down) {
+                            updateUp(true);
+                        }
 
-                }
-                // Compute segment lengths for left arm
-                const humerusLength = Math.sqrt((xElbow - xLeftShoulder) ** 2 + (yElbow - yLeftShoulder) ** 2); // Shoulder to Elbow
-                const forearmLength = Math.sqrt((xWrist - xElbow) ** 2 + (yWrist - yElbow) ** 2); // Elbow to Wrist
-                const shouderToWristLength = Math.sqrt((xWrist - xLeftShoulder) ** 2 + (yWrist - yLeftShoulder) ** 2); // Shoulder to Wrist
+                        if (up && down) {
+                            repCounter(repCount + 1);
+                            updateUp(false);
+                            updateDown(false);
+                        }
 
-                // Use the Law of Cosines to calculate the angle at the elbow (keypoint 7)
-                const cosTheta = (humerusLength ** 2 + forearmLength ** 2 - shouderToWristLength ** 2) / (2 * humerusLength * forearmLength);
-                const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosTheta))); // Clamp to avoid NaN
-                const angleDegrees = (angleRadians * 180) / Math.PI; // Convert to degrees
+                        if (rangleDegrees < 70) {
+                            updateRightFeedback('<70 degrees detected on Right Arm! Increase angle');
+                        } else
+                            updateRightFeedback('Right Arm CORRECT');
 
-                updateAngle(angleDegrees);
-
-                if (exerciseName === "Curl") {
-
-                    if (angleDegrees < 35) {
-                        updateFeedback('<35 degrees detected, too tensed! Increase angle');
-                    } else {
-                        updateFeedback('Correct Form');
                     }
-                }
+                    // Compute segment lengths for left arm
+                    const humerusLength = Math.sqrt((xElbow - xLeftShoulder) ** 2 + (yElbow - yLeftShoulder) ** 2); // Shoulder to Elbow
+                    const forearmLength = Math.sqrt((xWrist - xElbow) ** 2 + (yWrist - yElbow) ** 2); // Elbow to Wrist
+                    const shouderToWristLength = Math.sqrt((xWrist - xLeftShoulder) ** 2 + (yWrist - yLeftShoulder) ** 2); // Shoulder to Wrist
 
-                if (exerciseName === "Shoulder Press") {
-                    if (angleDegrees < 75) {
-                        updateFeedback('<75 degrees detected on Left Arm! Increase angle');
-                    } else
-                        updateFeedback('Left Arm CORRECT');
+                    // Use the Law of Cosines to calculate the angle at the elbow (keypoint 7)
+                    const cosTheta = (humerusLength ** 2 + forearmLength ** 2 - shouderToWristLength ** 2) / (2 * humerusLength * forearmLength);
+                    const angleRadians = Math.acos(Math.max(-1, Math.min(1, cosTheta))); // Clamp to avoid NaN
+                    const angleDegrees = (angleRadians * 180) / Math.PI; // Convert to degrees
+
+                    updateAngle(angleDegrees);
+
+                    if (exerciseName === "Curl") {
+                        if (angleDegrees > 170 && !up) {
+                            updateDown(true);
+                        }
+                        if (angleDegrees < 40 && down) {
+                            updateUp(true);
+                        }
+
+                        if (up && down) {
+                            repCounter(repCount + 1);
+                            updateUp(false);
+                            updateDown(false);
+                        }
+
+                        if (angleDegrees < 35) {
+                            updateFeedback('<35 degrees detected, too tensed! Increase angle');
+                        } else {
+                            updateFeedback('Correct Form');
+                        }
+                    }
+
+                    if (exerciseName === "Shoulder Press") {
+                        if (angleDegrees < 70) {
+                            updateFeedback('<70 degrees detected on Left Arm! Increase angle');
+                        } else
+                            updateFeedback('Left Arm CORRECT');
+                    }
+
                 }
 
                 // Extract keypoints for LEFT arm ONLY
@@ -308,13 +357,29 @@ function Video(): JSX.Element {
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity
                             style={styles.modalButton}
-                            onPress={() => handleSelectExercise('Curl')}
+                            onPress={() => {
+                                setDown(false);
+                                setUp(false);
+                                setRepCount(0);
+                                setAngle(0)
+                                setRightArmAngle(0)
+                                handleSelectExercise('Curl')
+
+                            }}
                         >
                             <Text style={styles.buttonText}>Bicep Curl</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.modalButton}
-                            onPress={() => handleSelectExercise('Shoulder Press')}
+                            onPress={() => {
+                                setDown(false);
+                                setUp(false);
+                                setRepCount(0);
+                                setAngle(0)
+                                setRightArmAngle(0)
+                                handleSelectExercise('Shoulder Press')
+
+                            }}
                         >
                             <Text style={styles.buttonText}>Shoulder Press</Text>
                         </TouchableOpacity>
@@ -329,29 +394,32 @@ function Video(): JSX.Element {
             <View style={styles.overlay}>
                 <Text
                     style={[
-                    styles.feedbackText,
-                    // Apply red style when:
-                    // - For Curl: feedback contains '<35 degrees'
-                    // - For Shoulder Press: feedback contains '<75 degrees'
-                    (exerciseName === "Curl" && feedback.includes('<35 degrees')) ||
-                    (exerciseName === "Shoulder Press" && feedback.includes('<75 degrees'))
-                        ? styles.incorrectFeedback
-                        : styles.correctFeedback,
+                        styles.feedbackText,
+                        // Apply red style when:
+                        // - For Curl: feedback contains '<35 degrees'
+                        // - For Shoulder Press: feedback contains '<70 degrees'
+                        (exerciseName === "Curl" && feedback.includes('<35 degrees')) ||
+                            (exerciseName === "Shoulder Press" && feedback.includes('<70 degrees'))
+                            ? styles.incorrectFeedback
+                            : styles.correctFeedback,
                     ]}
                 >
                     {feedback} ~ {angle !== null ? `${Math.round(angle)}°\n` : 'Loading...'}
                     {exerciseName === "Shoulder Press" && (
-                    <Text
-                        style={[
-                        styles.feedbackText,
-                        rFeedback.includes('<75 degrees')
-                            ? styles.incorrectFeedback
-                            : styles.correctFeedback,
-                        ]}
-                    >
-                        {rFeedback} ~ {rightArmAngle !== null ? `${Math.round(rightArmAngle)}°` : 'Loading...'}
-                    </Text>
+                        <Text
+                            style={[
+                                styles.feedbackText,
+                                rFeedback.includes('<70 degrees')
+                                    ? styles.incorrectFeedback
+                                    : styles.correctFeedback,
+                            ]}
+                        >
+                            {rFeedback} ~ {rightArmAngle !== null ? `${Math.round(rightArmAngle)}°` : 'Loading...'}
+                        </Text>
+
                     )}
+
+                    <Text>Reps: {repCount}</Text>
                 </Text>
             </View>
 
@@ -363,6 +431,25 @@ function Video(): JSX.Element {
                 </Text>
                 <TouchableOpacity style={styles.changeExercise} onPress={() => { setIsModalVisible(true); setExerciseName("") }}>
                     <Text style={styles.instructionText}>Change Exercise</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.changeExercise} onPress={() => {
+                    if (start) {
+                        setStart(false)
+                        setAngle(0)
+                        setRightArmAngle(0)
+                        setRepCount(0)
+                    }
+                    else {
+                        setStart(true)
+                        setAngle(0)
+                        setRightArmAngle(0)
+                        setRepCount(0)
+                    }
+
+
+                }}>
+                    <Text style={styles.instructionText}>{start ? "Stop" : "Start"}</Text>
                 </TouchableOpacity>
             </View>
         </View>
