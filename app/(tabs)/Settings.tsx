@@ -7,11 +7,16 @@ import { useRouter } from 'expo-router';
 import useUser from '../hooks/UserContext';
 import AuthPost from '../../Fetchers/Auth/AuthPost';
 import { host } from '../index';
+import useWorkoutPlan from 'app/hooks/WorkoutPlanContext';
+import Routine from 'app/WorkoutPlan/Routine';
+import Plan from 'app/WorkoutPlan/Plan';
 
 export default function Settings() {
     const globalStyle = useGlobalStyle();
     const router = useRouter();
     const { user, token, setToken, setUser } = useUser();
+    const defaultRoutine = new Routine("Routine 1", null)
+    const { setWorkoutPlans, setActivePlan, setChosenExercise, setTemporyPlansFetched, setRoutines, setFetched, setActiveRoutine, setWorkoutPlanFetched } = useWorkoutPlan();
 
     const [dropdowns, setDropdowns] = useState({
         notification: false,
@@ -67,6 +72,14 @@ export default function Settings() {
         );
         setUser(null);
         setToken('');
+        setFetched(false)
+        setRoutines([defaultRoutine])
+        setWorkoutPlans([new Plan("WorkoutPlan", [defaultRoutine])])
+        setActivePlan(new Plan("WorkoutPlan", [defaultRoutine]))
+        setActiveRoutine(defaultRoutine)
+        setChosenExercise(undefined)
+        setWorkoutPlanFetched(false)
+        setTemporyPlansFetched(false)
         router.replace('/');
     };
 
@@ -101,7 +114,7 @@ export default function Settings() {
             Alert.alert('Error', 'Unable to select an image. Please try again.');
         }
     };
-    
+
     const uploadProfilePicture = async (imageUri: string) => {
         try {
             const formData = new FormData();

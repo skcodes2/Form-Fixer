@@ -40,6 +40,9 @@ const WorkoutPlan = () => {
     const [temporyPlans, setTemporyPlans] = useState<{ name: string, routines: any[] }[] | null>(null);
     const [loading, setLoading] = useState(true); // Add loading state
 
+    console.log(workoutPlans[0])
+
+
     const updateRoutineList = (updatedRoutine: Routine) => {
         setRoutines(prevRoutines =>
             prevRoutines.map(routine =>
@@ -151,7 +154,6 @@ const WorkoutPlan = () => {
     };
 
     useEffect(() => {
-        console.log(hasPlan)
 
         if (fetched) setLoading(false);
         if (!fetched) {
