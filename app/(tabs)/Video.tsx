@@ -190,16 +190,18 @@ function Video(): JSX.Element {
                         const rangleDegrees = (rangleRadians * 180) / Math.PI; // Convert to degrees
 
                         updateAngleRight(rangleDegrees);
-                        if (rangleDegrees > 160 && !up) {
-                            updateDown(true);
+                        if (rangleDegrees > 160 && !up) {  
+                            updateUp(true);  // Starting position (arms fully extended)
+                            updateDown(false); // Reset the down flag
                         }
-                        if (rangleDegrees < 90 && down) {
-                            updateUp(true);
+                        
+                        if (rangleDegrees < 90 && up && !down) { 
+                            updateDown(true);  // Lowered to 90 degrees
                         }
-
-                        if (up && down) {
-                            repCounter(repCount + 1);
-                            updateUp(false);
+                        
+                        if (up && down) {  
+                            repCounter(repCount + 1); // Count rep only when full motion is completed
+                            updateUp(false);  // Reset
                             updateDown(false);
                         }
 
