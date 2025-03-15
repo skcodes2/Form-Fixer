@@ -68,7 +68,7 @@ export default function Home() {
         <Image source={require('../../assets/images/HomePage.jpeg')} style={styles.homePageContainer}/>
 
         <Text style={styles.appDescription}>
-            FormFixer.ai gives you custom workouts, meal plans, and real-time camera help to fix your form—like a coach in your pocket. Get fit, feel great, and enjoy your journey!
+            FormFixer.ai allows you to plan your workouts, provide meal ideas, and offers real-time form detection abilities to fix your exercise form, like a personal coach in your pocket. Get fit, feel great, and enjoy your journey!
         </Text>
         
         {/* ========================================

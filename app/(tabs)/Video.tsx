@@ -190,10 +190,10 @@ function Video(): JSX.Element {
                         const rangleDegrees = (rangleRadians * 180) / Math.PI; // Convert to degrees
 
                         updateAngleRight(rangleDegrees);
-                        if (rangleDegrees > 170 && !up) {
+                        if (rangleDegrees > 160 && !up) {
                             updateDown(true);
                         }
-                        if (rangleDegrees < 80 && down) {
+                        if (rangleDegrees < 90 && down) {
                             updateUp(true);
                         }
 
@@ -223,16 +223,19 @@ function Video(): JSX.Element {
 
                     if (exerciseName === "Curl") {
                         // Existing rep count logic for angle-based curl detection:
-                        if (angleDegrees > 170 && !up) {
-                            updateDown(true);
+                        if (angleDegrees > 170 && !down) {  
+                            updateDown(true);  // Arm is fully extended (bottom)
+                            updateUp(false);   // Reset the up flag
                         }
-                        if (angleDegrees < 45 && down) {
-                            updateUp(true);
+                        
+                        if (angleDegrees < 45 && down && !up) { 
+                            updateUp(true);  // Arm is at the top
                         }
-                        if (up && down) {
-                            repCounter(repCount + 1);
+                        
+                        if (down && up) {  
+                            repCounter(repCount + 1); // Only count when completing full motion
+                            updateDown(false);  // Reset
                             updateUp(false);
-                            updateDown(false);
                         }
                     
                         // Extract left hip keypoint (keypoint 11) for torso approximation
