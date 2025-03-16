@@ -28,7 +28,7 @@ import AuthPost from '../Fetchers/Auth/AuthDelete';
 import Post from '../Fetchers/NoAuth/Post';
 import Put from '../Fetchers/NoAuth/Put';
 
-export let host = "http://10.0.0.3:3000"
+export let host = "http://10.0.0.248:3000"
 
 const redirectUri = makeRedirectUri({
   scheme: "com.formfix.app", // Ensure this matches your Android package name
@@ -95,7 +95,7 @@ export default function Index() {
     }
   }, [response]);
 
-  ///////////////////////////////////////////////////////////////////////////
+
   const router = useRouter();
   const globalStyle = useGlobalStyle();
   const { setUser, setToken } = useUser()
@@ -120,34 +120,24 @@ export default function Index() {
       { email, password },
       (error) => { setError(error) },
       () => {
-        router.replace('/onboarding/OnboardingFlow');
       },
-      async (data) => {
 
-        const userObj = data.user;
-        const token = data.token;
+      (data) => {
+        console.log("Server responded:", data);
+        const userObj = data[0];
+        const token = data[1];
+        console.log("User data:", userObj);
 
+        if (userObj.hasPlan) {
+          router.replace("/(tabs)/Home");
+        }
+        else {
+          router.replace("/onboarding/OnboardingFlow");
+        }
         setUser(userObj);
         setToken(token);
-
-
-        // if (typeof userObj.hasCompletedOnboarding === "undefined") {
-        //   userObj.hasCompletedOnboarding = false;
-        // }
-
-        const mergedUserData = {
-          ...userObj,
-          token,
-        };
-        try {
-          await AsyncStorage.setItem("user", JSON.stringify(mergedUserData));
-          console.log("User data stored in AsyncStorage.");
-        } catch (err) {
-          console.error("Error storing user data:", err);
-        }
-
-        router.replace('/onboarding/OnboardingFlow');
       }
+
     )
 
   };

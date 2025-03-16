@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import {
     Dimensions,
     StatusBar,

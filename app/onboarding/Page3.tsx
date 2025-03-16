@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, FlatList, StyleSheet } from "react-native";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { FontAwesome } from '@expo/vector-icons';
 
 const interests = [
     { name: "Technique", icon: require("../../assets/images/onboarding/technique.png") },
@@ -27,7 +27,7 @@ const CustomizeInterests: React.FC<{ onNext: () => void; onBack: () => void }> =
         <View style={styles.container}>
             {/* Back Button */}
             <TouchableOpacity onPress={onBack} style={styles.backButton}>
-                <MaterialIcons name="arrow-back" size={24} color="black" />
+                <FontAwesome name="arrow-left" size={24} color="white" />
             </TouchableOpacity>
 
             {/* Heading */}

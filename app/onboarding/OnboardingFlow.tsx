@@ -6,10 +6,13 @@ import ProfilePicture from "./Page1";
 import HelpSelection from "./Page2";
 import CustomizeInterests from "./Page3";
 import GenderSelection from "./Page4";
+import useUser from "app/hooks/UserContext";
 
 export default function OnboardingFlow() {
     const [step, setStep] = useState<number>(0);
     const router = useRouter();
+    const { user } = useUser();
+
 
     const nextStep = () => {
         if (step < 3) {

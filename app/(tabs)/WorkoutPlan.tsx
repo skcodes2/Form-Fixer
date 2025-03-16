@@ -39,8 +39,7 @@ const WorkoutPlan = () => {
     const [hasPlan, setHasPlan] = useState(user?.hasPlan);
     const [temporyPlans, setTemporyPlans] = useState<{ name: string, routines: any[] }[] | null>(null);
     const [loading, setLoading] = useState(true); // Add loading state
-
-    console.log(workoutPlans[0])
+    console.log(fetched)
 
 
     const updateRoutineList = (updatedRoutine: Routine) => {
@@ -163,6 +162,7 @@ const WorkoutPlan = () => {
                 setDropdownValue(defaultPlan[0].getName());
                 setRoutines(defaultPlan[0].getRoutines());
                 setHasPlan(true);
+                console.log("called1")
                 if (user)
                     setUser({ ...user, hasPlan: true });
             }
@@ -174,6 +174,7 @@ const WorkoutPlan = () => {
 
     useEffect(() => {
         if (!temporyPlansFetched && temporyPlans) {
+            console.log("called2")
             let plans: Plan[] = [];
             temporyPlans.forEach(plan => {
                 let routinesT: Routine[] = [];
@@ -208,10 +209,12 @@ const WorkoutPlan = () => {
             setActivePlan(workoutPlans[0]);
             setWorkoutPlanFetched(false);
             setLoading(false); // Set loading to false after data is fetched
+            console.log("called3")
+
         }
     }, [workoutPlans]);
 
-    if (loading) {
+    if (loading && !fetched) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#F50707" />

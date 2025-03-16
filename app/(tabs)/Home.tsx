@@ -10,13 +10,13 @@ import {
   TouchableOpacity,    // <-- ADDED TouchableOpacity for buttons
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import useUser from 'app/hooks/UserContext';
 
 export default function Home() {
-    const router = useRouter();
-  // =======================
-  // 1) CAROUSEL SETUP
-  // =======================
+  const router = useRouter();
   const screenWidth = Dimensions.get('window').width; // for paging calculation
+  const { token } = useUser();
+
 
   // Array of images for the carousel (replace with your own if desired)
   const carouselImages = [
@@ -50,7 +50,6 @@ export default function Home() {
       scrollViewRef.current?.scrollTo({ x: newIndex * screenWidth, animated: true });
     }
   };
-  // =======================
 
   return (
     <ImageBackground
@@ -65,12 +64,12 @@ export default function Home() {
           </Text>
         </View>
 
-        <Image source={require('../../assets/images/HomePage.jpeg')} style={styles.homePageContainer}/>
+        <Image source={require('../../assets/images/HomePage.jpeg')} style={styles.homePageContainer} />
 
         <Text style={styles.appDescription}>
-            FormFixer.ai allows you to plan your workouts, provide meal ideas, and offers real-time form detection abilities to fix your exercise form, like a personal coach in your pocket. Get fit, feel great, and enjoy your journey!
+          FormFixer.ai gives you custom workouts, meal plans, and real-time camera help to fix your form—like a coach in your pocket. Get fit, feel great, and enjoy your journey!
         </Text>
-        
+
         {/* ========================================
             2) ADD THE CAROUSEL BELOW (INSIDE SCROLLVIEW)
         ========================================= */}
@@ -128,35 +127,35 @@ export default function Home() {
         <Text style={styles.chooseFormTitle}>Reach Your Goal</Text>
         <Text style={styles.subDescription}>Amazing Workout Program</Text>
 
-          <View style={[styles.exerciseImagesContainer, { marginTop: 10 }]}>
-          </View>
-          <View style={[styles.exerciseImagesContainer, { marginTop: 10 }]}>
-            <View style={styles.exerciseCard}>
-              <View style={styles.imageOverlay}>
-                <Image
-                  source={require('../../assets/images/dumbellCurl.jpg')}
-                  style={styles.exerciseImage}
-                />
-                <View style={styles.textOverlay}>
-                  <Text style={styles.exerciseLabel}>Dumbell Curl</Text>
-                </View>
-              </View>
-            </View>
-            <View style={styles.exerciseCard}>
-              <View style={styles.imageOverlay}>
-                <Image
-                  source={require('../../assets/images/inclinedumbbellpress.jpeg')}
-                  style={styles.exerciseImage}
-                />
-                <View style={styles.textOverlay}>
-                  <Text style={styles.exerciseLabel}>Shoulder Press</Text>
-                </View>
+        <View style={[styles.exerciseImagesContainer, { marginTop: 10 }]}>
+        </View>
+        <View style={[styles.exerciseImagesContainer, { marginTop: 10 }]}>
+          <View style={styles.exerciseCard}>
+            <View style={styles.imageOverlay}>
+              <Image
+                source={require('../../assets/images/dumbellCurl.jpg')}
+                style={styles.exerciseImage}
+              />
+              <View style={styles.textOverlay}>
+                <Text style={styles.exerciseLabel}>Dumbell Curl</Text>
               </View>
             </View>
           </View>
+          <View style={styles.exerciseCard}>
+            <View style={styles.imageOverlay}>
+              <Image
+                source={require('../../assets/images/inclinedumbbellpress.jpeg')}
+                style={styles.exerciseImage}
+              />
+              <View style={styles.textOverlay}>
+                <Text style={styles.exerciseLabel}>Shoulder Press</Text>
+              </View>
+            </View>
+          </View>
+        </View>
 
         <TouchableOpacity onPress={() => router.push('/(tabs)/WorkoutPlan')} style={styles.WorkoutPlanButton}>
-            <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center'}}>Start Now</Text>
+          <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>Start Now</Text>
         </TouchableOpacity>
 
       </ScrollView>

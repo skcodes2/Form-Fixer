@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { FontAwesome } from '@expo/vector-icons';
 
 const genders = [
     { name: "Male", icon: require("../../assets/images/onboarding/man.png") },
@@ -15,7 +15,7 @@ const GenderSelection: React.FC<{ onNext: () => void; onBack: () => void }> = ({
 
             {/* Back Button */}
             <TouchableOpacity onPress={onBack} style={{ position: "absolute", top: 20, left: 20 }}>
-                <MaterialIcons name="arrow-back" size={24} color="black" />
+                <FontAwesome name="arrow-left" size={24} color="white" />
             </TouchableOpacity>
 
             {/* Heading */}

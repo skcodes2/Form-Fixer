@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { FontAwesome } from '@expo/vector-icons';
 
 const options = [
     "Weight Loss",
@@ -22,7 +22,7 @@ const ProfilePicture: React.FC<Props> = ({ onNext, onBack }) => {
 
             {/* Back Button (only works if onBack is defined) */}
             <TouchableOpacity onPress={() => onBack?.()} style={{ position: "absolute", top: 20, left: 20 }}>
-                <MaterialIcons name="arrow-back" size={28} color="white" />
+                <FontAwesome name="arrow-left" size={28} color="white" />
             </TouchableOpacity>
 
             {/* Heading */}
@@ -53,8 +53,8 @@ const ProfilePicture: React.FC<Props> = ({ onNext, onBack }) => {
                         onPress={() => setSelectedOption(option)}
                     >
                         <Text style={{ fontSize: 16, fontWeight: "500", color: "#333" }}>{option}</Text>
-                        <MaterialIcons
-                            name={selectedOption === option ? "check-circle" : "radio-button-unchecked"}
+                        <FontAwesome
+                            name={selectedOption === option ? "check-circle" : "circle-o"}
                             size={24}
                             color={selectedOption === option ? "#990000" : "#D1D5DB"}
                         />
