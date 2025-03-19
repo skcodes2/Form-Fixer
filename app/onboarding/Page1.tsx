@@ -3,10 +3,10 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { FontAwesome } from '@expo/vector-icons';
 
 const options = [
-    "Weight Loss",
-    "Better sleeping habit",
-    "Track my nutrition",
-    "Improve overall fitness",
+    "Beginner (New)",
+    "Intermediate (>1 year)",
+    "Proficient (1-2 years)",
+    "Expert (2+ years)",
 ];
 
 type Props = {
@@ -27,7 +27,7 @@ const ProfilePicture: React.FC<Props> = ({ onNext, onBack }) => {
 
             {/* Heading */}
             <Text style={{ fontSize: 20, fontWeight: "bold", marginTop: 40, textAlign: "center", color: "white" }}>
-                How can we help you?
+                How long have you been working out for?
             </Text>
 
             {/* Selection Options */}

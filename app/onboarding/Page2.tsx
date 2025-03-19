@@ -3,10 +3,10 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { FontAwesome } from '@expo/vector-icons';
 
 const options = [
-    "Weight Loss",
-    "Better sleeping habit",
-    "Track my nutrition",
-    "Improve overall fitness",
+    "Weight Loss (Shredding)",
+    "Maintain Weight (Lean Bulking)",
+    "Gain Weight (Bulking)",
+    "For Fun",
 ];
 
 const HelpSelection: React.FC<{ onNext: () => void; onBack: () => void }> = ({ onNext, onBack }) => {
@@ -22,7 +22,7 @@ const HelpSelection: React.FC<{ onNext: () => void; onBack: () => void }> = ({ o
 
             {/* Heading */}
             <Text style={{ fontSize: 20, fontWeight: "bold", marginTop: 40, textAlign: "center", color: "white" }}>
-                How can we help you?
+                What is your fitness goal?
             </Text>
 
             {/* Selection Options */}
