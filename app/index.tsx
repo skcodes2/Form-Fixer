@@ -28,7 +28,7 @@ import AuthPost from '../Fetchers/Auth/AuthDelete';
 import Post from '../Fetchers/NoAuth/Post';
 import Put from '../Fetchers/NoAuth/Put';
 
-export let host = "http://192.168.1.15:3000"
+export let host = "http://192.168.127.167:3000"
 
 const redirectUri = makeRedirectUri({
   scheme: "com.formfix.app", // Ensure this matches your Android package name
@@ -213,8 +213,8 @@ export default function Index() {
 
       <View style={styles.container}>
         <Text style={[styles.title, { fontFamily: globalStyle.fontStyle.titleFont, fontSize: globalStyle.fontSize.xl }]}>
-          <Text style={[styles.highlight, { color: globalStyle.colors.primary }]}>AI </Text>
-          Fitness Trainer
+          FormFixer
+          <Text style={[styles.highlight, { color: globalStyle.colors.primary }]}>.AI</Text>
         </Text>
 
         <View style={[styles.inputContainer, { backgroundColor: 'transparent' }]}>
