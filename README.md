@@ -1,7 +1,8 @@
 # Form Fixer
 
 **Form Fixer** is an AI-powered fitness companion mobile app built with Expo and React Native. It helps users create, track, and optimize workout routines, access video tutorials, plan meals, and even perform pose estimation using a custom TensorFlow Lite model.
-VIDEO DEMO: https://www.youtube.com/watch?v=JZ4HPtc7ChY&ab_channel=TheBestofAI
+
+Video Demo: https://www.youtube.com/watch?v=JZ4HPtc7ChY&ab_channel=TheBestofAI
 
 ---
 
